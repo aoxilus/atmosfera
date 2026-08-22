@@ -80,7 +80,7 @@ Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteo
 - [x] Add Vitest unit tests for scale, tide, lava pulse, terrain cap, and reaction classification.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
-- [ ] Push to GitHub if authentication allows.
+- [x] Push to GitHub if authentication allows.
 
 ## Completed
 

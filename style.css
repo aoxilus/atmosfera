@@ -1,0 +1,238 @@
+/**
+ * atmosfera — visual shell for the primordial simulation.
+ * 🥑 by aoxilus · CC BY-NC-SA 4.0
+ */
+
+:root {
+  color-scheme: dark;
+  --bg: #081018;
+  --panel: rgba(10, 23, 34, 0.86);
+  --panel-strong: rgba(14, 34, 48, 0.96);
+  --line: rgba(158, 214, 219, 0.22);
+  --text: #edf8f7;
+  --muted: #99b8b7;
+  --accent: #7ef0c1;
+  --hot: #ffbc6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(126, 240, 193, 0.18), transparent 28rem),
+    radial-gradient(circle at 80% 0%, rgba(84, 132, 255, 0.16), transparent 32rem),
+    linear-gradient(180deg, #03070d, var(--bg));
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.shell {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.hero,
+.idea-card,
+.sim-panel {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 10px;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  line-height: 0.9;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.nav-help {
+  margin-bottom: 0;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  margin: 0 0.16em;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom-color: rgba(0, 0, 0, 0.45);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font: 800 0.78rem ui-monospace, SFMono-Regular, Consolas, monospace;
+  padding: 0.16em 0.42em;
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+button {
+  border: 1px solid rgba(126, 240, 193, 0.32);
+  border-radius: 999px;
+  background: rgba(126, 240, 193, 0.12);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 10px 16px;
+}
+
+button:hover {
+  background: rgba(126, 240, 193, 0.22);
+}
+
+.sim-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  min-height: 520px;
+  background: #02070d;
+}
+
+.hud {
+  border-left: 1px solid var(--line);
+  background: var(--panel-strong);
+  padding: 20px;
+}
+
+.hud h2 {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+dl {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  font-weight: 900;
+}
+
+.legend {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.events {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.idea-card {
+  margin-top: 18px;
+  padding: 22px 24px;
+}
+
+.idea-card h2 {
+  margin-bottom: 8px;
+}
+
+.idea-card p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .sim-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .controls {
+    justify-content: flex-start;
+  }
+
+  .hud {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  canvas {
+    min-height: 420px;
+  }
+}

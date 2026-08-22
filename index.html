@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- atmosfera — primordial chemistry and life sandbox. 🥑 by aoxilus · CC BY-NC-SA 4.0 -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>atmosfera</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">AOXILUS primordial sim</p>
+          <h1>atmosfera</h1>
+          <p>
+            A tiny world where Earth-like atoms fall from space, drift through wind and water,
+            bond into molecules, polymer chains, protocells, organisms, and complex life.
+          </p>
+          <p class="nav-help">
+            Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, drag mouse to look, wheel or <kbd>R</kbd><kbd>F</kbd> to zoom.
+          </p>
+        </div>
+        <div class="controls" aria-label="Simulation controls">
+          <button id="toggle">Pause</button>
+          <button id="seed">Seed organics</button>
+          <button id="storm">Meteor storm</button>
+        </div>
+      </section>
+
+      <section class="sim-panel">
+        <canvas id="world" width="1200" height="720" aria-label="atmosfera low-poly 3D planet"></canvas>
+        <aside class="hud">
+          <h2>World State</h2>
+          <dl>
+            <div><dt>Atoms</dt><dd id="atoms">0</dd></div>
+            <div><dt>Molecules</dt><dd id="molecules">0</dd></div>
+            <div><dt>Polymers</dt><dd id="polymers">0</dd></div>
+            <div><dt>Life</dt><dd id="life">0</dd></div>
+            <div><dt>Era</dt><dd id="era">Atom rain</dd></div>
+            <div><dt>Build</dt><dd id="build">scale check</dd></div>
+          </dl>
+          <h2>Distribution</h2>
+          <div id="legend" class="legend"></div>
+          <h2>Interaction Log</h2>
+          <ol id="events" class="events"></ol>
+        </aside>
+      </section>
+
+      <section class="idea-card">
+        <h2>Rule ladder</h2>
+        <p>
+          Atoms collide in water. Correct CHON-rich mixes become organic molecules. Stable chains
+          become polymers. Polymers plus membranes and energy become protocells. Protocells mutate
+          into water, land, and sky life if the environment lets them survive.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

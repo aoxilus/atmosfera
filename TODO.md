@@ -108,6 +108,14 @@ Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteo
 - [x] Remove floating-ring volcano appearance.
 - [x] Run tests/build and push.
 
+## Current Non-Blocking Systems Pass
+
+- [x] Split simulation into frame-friendly systems with intervals/budgets.
+- [x] Make volcanoes visibly throw metallic elements and occasional molecules.
+- [x] Keep render loop responsive by limiting reaction checks and particle updates per frame.
+- [x] Document system cadence in `PROGRESS.md`.
+- [x] Run tests/build and push.
+
 ## Completed
 
 - [x] Initial Vite project runs locally.

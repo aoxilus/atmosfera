@@ -2,7 +2,7 @@
 
 ## Current Visible Build
 
-`v3d-anchored-volcanoes`
+`v3d-nonblocking-volcanic-emissions`
 
 This label is shown in the HUD under `Build`. If the browser does not show this exact label, it is displaying an old cached/server version.
 
@@ -24,6 +24,10 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 - Volcano craters are now varied low-poly polygons with multiple sizes.
 - Volcanoes now have mountain/cone bases that extend into the terrain, with polygon lava on the top crater.
 - Volcanoes emit metallic elements and reactive minerals into nearby surface chemistry.
+- Volcanoes now emit visible bursts of metallic particles plus occasional Fe-S molecules.
+- Simulation work is split into small per-frame budgets: particle updates, reaction checks, meteor updates, volcanic emission intervals, HUD updates, and render stay separate.
+- Reaction checks are capped per frame so chemistry can coexist with navigation and rendering without blocking.
+- Particle updates are processed through a rolling cursor so not every particle has to update every frame.
 - Chemistry distribution is intentionally non-uniform through surface hotspots.
 - Chemistry particles are pulled toward the surface/low atmosphere instead of floating high above the planet.
 - Camera/focus are clamped above terrain so navigation should not go under the surface.
@@ -46,7 +50,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - Open `http://127.0.0.1:5173`.
 - Hard refresh with `Ctrl+F5`.
-- Confirm the HUD shows `Build: v3d-anchored-volcanoes`.
+- Confirm the HUD shows `Build: v3d-nonblocking-volcanic-emissions`.
 - Use mouse wheel or `R` to zoom closer to the surface.
 - Use `WASD` to travel around the globe and find red/orange crater pools.
 
@@ -63,7 +67,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - [ ] Restart dev server.
 - [ ] Hard refresh browser with `Ctrl+F5`.
-- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-anchored-volcanoes`.
+- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-nonblocking-volcanic-emissions`.
 - [ ] Temporarily add bright lava locator beacons if lava is too hard to find at planetary scale.
 
 ## Handoff For Tomorrow

@@ -40,6 +40,8 @@ const totalWeight = atoms.reduce((sum, atom) => sum + atom.weight, 0);
 const planetRadius = PLANET_RADIUS;
 const visibleRadius = 1600;
 const tideSpeed = TIDE_SPEED;
+const particleUpdateBudget = 180;
+const reactionCheckBudget = 120;
 const particles = [];
 const events = [];
 const lavaPools = [];
@@ -54,6 +56,7 @@ let focus = new THREE.Vector3(0, planetRadius + 420, 0);
 let yaw = 0;
 let pitch = -0.22;
 let distance = 9600;
+let particleCursor = 0;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#020712');
@@ -256,17 +259,21 @@ function updateLavaPools() {
 }
 
 function emitVolcanicChemistry() {
-  if (tick % 36 !== 0 || volcanoVents.length === 0) return;
+  if (tick % 24 !== 0 || volcanoVents.length === 0) return;
   const vent = volcanoVents[Math.floor(Math.random() * volcanoVents.length)];
   const metallic = atoms.filter((atom) => ['Fe', 'Si', 'S', 'P', 'M', 'Ca', 'Na'].includes(atom.key));
-  const origin = surfacePointWithAltitude(35 + Math.random() * 90, vent.direction.clone());
-  const kind = metallic[Math.floor(Math.random() * metallic.length)];
-  spawnParticle(kind, origin);
-  const particle = particles[particles.length - 1];
-  if (particle) {
-    particle.velocity.add(vent.direction.clone().multiplyScalar(0.16 + Math.random() * 0.1));
+  const burstCount = 3 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < burstCount; i += 1) {
+    const kind = metallic[Math.floor(Math.random() * metallic.length)];
+    const originDirection = vent.direction.clone().add(randomSurfacePoint(0.015)).normalize();
+    spawnParticle(kind, surfacePointWithAltitude(85 + Math.random() * 170, originDirection), {
+      scale: 1.35,
+      energy: 0.65 + Math.random() * 0.25,
+      velocity: vent.direction.clone().multiplyScalar(0.34 + Math.random() * 0.28).add(randomSurfacePoint(0.06)),
+    });
   }
-  if (tick % 360 === 0) addEvent(`${kind.name} vented from a volcanic crater into the reactive surface zone.`);
+  if (Math.random() < 0.38) spawnVolcanicMolecule(vent);
+  if (tick % 240 === 0) addEvent('Volcanic crater burst: metallic atoms and Fe-S molecules entered the surface chemistry.');
 }
 
 function makeStars() {
@@ -287,20 +294,32 @@ function makeParticleMesh(kind) {
   return new THREE.Mesh(geometry, material);
 }
 
-function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(45 + Math.random() * 155)) {
+function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(45 + Math.random() * 155), options = {}) {
   if (particles.length > 520) return;
   const mesh = makeParticleMesh(kind);
   mesh.position.copy(position);
+  if (options.scale) mesh.scale.setScalar(options.scale);
   mesh.castShadow = true;
   particleGroup.add(mesh);
   particles.push({
     mesh,
     atoms: [kind.key],
     organic: kind.organic,
-    energy: Math.random(),
-    stage: 'atom',
-    label: kind.key,
-    velocity: randomSurfacePoint(1).multiplyScalar(0.08),
+    energy: options.energy ?? Math.random(),
+    stage: options.stage || 'atom',
+    label: options.label || kind.key,
+    velocity: options.velocity || randomSurfacePoint(1).multiplyScalar(0.08),
+  });
+}
+
+function spawnVolcanicMolecule(vent) {
+  const moleculeKind = { key: 'Fe-S', name: 'Iron-sulfur molecule', color: '#ff9a4d', organic: 2 };
+  spawnParticle(moleculeKind, surfacePointWithAltitude(110 + Math.random() * 140, vent.direction.clone()), {
+    stage: 'molecule',
+    label: 'Fe-S',
+    scale: 1.8,
+    energy: 0.75,
+    velocity: vent.direction.clone().multiplyScalar(0.42 + Math.random() * 0.22).add(randomSurfacePoint(0.07)),
   });
 }
 
@@ -374,7 +393,7 @@ function combine(a, b) {
 
 function reactVisibleParticles() {
   const visible = particles.filter((particle) => particle.mesh.position.distanceTo(focus) < visibleRadius && !particle.dead);
-  const maxChecks = Math.min(260, visible.length * 2);
+  const maxChecks = Math.min(reactionCheckBudget, visible.length * 2);
   for (let i = 0; i < maxChecks; i += 1) {
     const a = visible[Math.floor(Math.random() * visible.length)];
     const b = visible[Math.floor(Math.random() * visible.length)];
@@ -394,7 +413,11 @@ function reactVisibleParticles() {
 function updateParticles(delta) {
   if (tick % 4 === 0) spawnParticle(undefined, surfacePointWithAltitude(45 + Math.random() * 155, focus.clone().normalize().add(randomSurfacePoint(0.12)).normalize()));
   if (tick % 420 === 0) addEvent('Local atoms drift through wind, gravity, and tide zones.');
-  for (const particle of particles) {
+  const updates = Math.min(particleUpdateBudget, particles.length);
+  for (let i = 0; i < updates; i += 1) {
+    const particle = particles[particleCursor % particles.length];
+    particleCursor += 1;
+    if (!particle || particle.dead) continue;
     const position = particle.mesh.position;
     const direction = position.clone().normalize();
     const surface = direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 45);
@@ -417,7 +440,8 @@ function updateParticles(delta) {
 }
 
 function updateMeteors() {
-  for (let i = meteorGroup.children.length - 1; i >= 0; i -= 1) {
+  const meteorUpdates = Math.min(24, meteorGroup.children.length);
+  for (let i = meteorUpdates - 1; i >= 0; i -= 1) {
     const meteor = meteorGroup.children[i];
     meteor.position.add(meteor.userData.velocity);
     meteor.rotation.x += 0.12;

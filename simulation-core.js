@@ -1,7 +1,7 @@
 export const PLANET_RADIUS = 13200;
-export const TIDE_SPEED = 0.00375;
+export const TIDE_SPEED = 0.0009;
 export const LAVA_COUNT = 45;
-export const BUILD_LABEL = 'v3d-surface-craters-log-below';
+export const BUILD_LABEL = 'v3d-volcanic-chemistry-hotspots';
 
 export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));

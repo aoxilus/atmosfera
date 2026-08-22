@@ -43,6 +43,8 @@ const tideSpeed = TIDE_SPEED;
 const particles = [];
 const events = [];
 const lavaPools = [];
+const volcanoVents = [];
+const chemistryHotspots = [];
 const keys = new Set();
 const pointer = { dragging: false, x: 0, y: 0 };
 const clock = new THREE.Clock();
@@ -136,8 +138,17 @@ function randomSurfacePoint(radius = planetRadius) {
   return direction.multiplyScalar(radius);
 }
 
-function surfacePointWithAltitude(altitude = 80) {
-  const direction = randomSurfacePoint(1).normalize();
+for (let i = 0; i < 9; i += 1) chemistryHotspots.push(randomSurfacePoint(1).normalize());
+
+function pickHotspotDirection() {
+  if (Math.random() < 0.72) {
+    const hotspot = chemistryHotspots[Math.floor(Math.random() * chemistryHotspots.length)];
+    return hotspot.clone().add(randomSurfacePoint(0.18 + Math.random() * 0.22)).normalize();
+  }
+  return randomSurfacePoint(1).normalize();
+}
+
+function surfacePointWithAltitude(altitude = 80, direction = pickHotspotDirection()) {
   return direction.multiplyScalar(planetRadius + terrainHeight(direction) + altitude);
 }
 
@@ -197,18 +208,20 @@ function makeClouds() {
 
 function makeVolcanoes() {
   for (let i = 0; i < LAVA_COUNT; i += 1) {
-    const direction = randomSurfacePoint(1).normalize();
+    const direction = pickHotspotDirection();
+    const radius = 55 + Math.random() * 135;
+    const segments = 5 + Math.floor(Math.random() * 6);
     const volcano = new THREE.Group();
     volcano.position.copy(direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 18));
     volcano.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(120, 12, 5, 18), materials.mountain);
+    const rim = new THREE.Mesh(new THREE.RingGeometry(radius * 0.72, radius, segments), materials.mountain);
     rim.rotation.x = Math.PI / 2;
     rim.position.y = 3;
     rim.castShadow = true;
     volcano.add(rim);
 
-    const crater = new THREE.Mesh(new THREE.CircleGeometry(96, 18), materials.lava.clone());
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.68, segments), materials.lava.clone());
     crater.rotation.x = -Math.PI / 2;
     crater.position.y = 5;
     crater.userData.phase = Math.random() * Math.PI * 2;
@@ -220,6 +233,7 @@ function makeVolcanoes() {
     volcano.add(glow);
 
     planet.add(volcano);
+    volcanoVents.push({ direction, group: volcano, radius });
   }
 }
 
@@ -230,6 +244,20 @@ function updateLavaPools() {
     pool.material.color.lerpColors(new THREE.Color('#c81e0b'), new THREE.Color('#ff8a18'), pulse);
     pool.material.emissive.lerpColors(new THREE.Color('#7a0d05'), new THREE.Color('#ff3b00'), pulse);
   }
+}
+
+function emitVolcanicChemistry() {
+  if (tick % 36 !== 0 || volcanoVents.length === 0) return;
+  const vent = volcanoVents[Math.floor(Math.random() * volcanoVents.length)];
+  const metallic = atoms.filter((atom) => ['Fe', 'Si', 'S', 'P', 'M', 'Ca', 'Na'].includes(atom.key));
+  const origin = surfacePointWithAltitude(35 + Math.random() * 90, vent.direction.clone());
+  const kind = metallic[Math.floor(Math.random() * metallic.length)];
+  spawnParticle(kind, origin);
+  const particle = particles[particles.length - 1];
+  if (particle) {
+    particle.velocity.add(vent.direction.clone().multiplyScalar(0.16 + Math.random() * 0.1));
+  }
+  if (tick % 360 === 0) addEvent(`${kind.name} vented from a volcanic crater into the reactive surface zone.`);
 }
 
 function makeStars() {
@@ -355,7 +383,7 @@ function reactVisibleParticles() {
 }
 
 function updateParticles(delta) {
-  if (tick % 4 === 0) spawnParticle(undefined, focus.clone().normalize().multiplyScalar(planetRadius + 70 + Math.random() * 140));
+  if (tick % 4 === 0) spawnParticle(undefined, surfacePointWithAltitude(45 + Math.random() * 155, focus.clone().normalize().add(randomSurfacePoint(0.12)).normalize()));
   if (tick % 420 === 0) addEvent('Local atoms drift through wind, gravity, and tide zones.');
   for (const particle of particles) {
     const position = particle.mesh.position;
@@ -408,11 +436,15 @@ function updateNavigation(delta) {
   if (keys.has('r')) distance = Math.max(650, distance - 5200 * delta);
   if (keys.has('f')) distance = Math.min(52000, distance + 5200 * delta);
 
-  const minHeight = planetRadius + 280;
-  if (focus.length() < minHeight) focus.normalize().multiplyScalar(minHeight);
+  const focusDirection = focus.clone().normalize();
+  const minHeight = planetRadius + terrainHeight(focusDirection) + 320;
+  if (focus.length() < minHeight) focus.copy(focusDirection.multiplyScalar(minHeight));
 
   const cameraOffset = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)).multiplyScalar(-distance);
   camera.position.copy(focus).add(cameraOffset);
+  const cameraDirection = camera.position.clone().normalize();
+  const minCameraHeight = planetRadius + terrainHeight(cameraDirection) + 180;
+  if (camera.position.length() < minCameraHeight) camera.position.copy(cameraDirection.multiplyScalar(minCameraHeight));
   camera.lookAt(focus);
 }
 
@@ -444,6 +476,7 @@ function frame() {
     if (ocean) ocean.scale.setScalar(1 + Math.sin(tick * tideSpeed) * 0.00075);
     if (tick % 720 === 0) addEvent('Slow tide cycle shifted ocean and lava pools.');
     updateLavaPools();
+    emitVolcanicChemistry();
     for (const child of planet.children) {
       if (child.userData.spin) child.rotation.y += child.userData.spin;
     }

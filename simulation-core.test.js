@@ -3,7 +3,7 @@ import { BUILD_LABEL, LAVA_COUNT, PLANET_RADIUS, TIDE_SPEED, classifyReaction, l
 
 describe('simulation constants', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3d-surface-craters-log-below');
+    expect(BUILD_LABEL).toBe('v3d-volcanic-chemistry-hotspots');
   });
 
   it('keeps the large planet and 5x lava count', () => {
@@ -11,8 +11,8 @@ describe('simulation constants', () => {
     expect(LAVA_COUNT).toBe(45);
   });
 
-  it('uses tide timing at 1/8 of the earlier 0.03 speed', () => {
-    expect(TIDE_SPEED).toBeCloseTo(0.03 / 8);
+  it('uses very slow tide timing to avoid vibration', () => {
+    expect(TIDE_SPEED).toBeLessThan(0.03 / 16);
   });
 });
 

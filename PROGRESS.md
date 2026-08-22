@@ -2,7 +2,7 @@
 
 ## Current Visible Build
 
-`v3d-surface-craters-log-below`
+`v3d-volcanic-chemistry-hotspots`
 
 This label is shown in the HUD under `Build`. If the browser does not show this exact label, it is displaying an old cached/server version.
 
@@ -21,7 +21,12 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 - Interaction Log now sits below the planet viewer, not inside the side HUD.
 - Atom Distribution now sits below the planet viewer so it is easier to see.
 - Volcanoes are now surface crater lava pools, not raised cone/spaceship shapes.
+- Volcano craters are now varied low-poly polygons with multiple sizes.
+- Volcanoes emit metallic elements and reactive minerals into nearby surface chemistry.
+- Chemistry distribution is intentionally non-uniform through surface hotspots.
 - Chemistry particles are pulled toward the surface/low atmosphere instead of floating high above the planet.
+- Camera/focus are clamped above terrain so navigation should not go under the surface.
+- Ocean/lava tide timing is slower to avoid visible vibration.
 - Local atoms spawn more often near the camera focus so interactions are easier to see at planet scale.
 - Mouse drag controls camera look/orbit.
 - Mouse wheel controls zoom.
@@ -40,7 +45,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - Open `http://127.0.0.1:5173`.
 - Hard refresh with `Ctrl+F5`.
-- Confirm the HUD shows `Build: v3d-surface-craters-log-below`.
+- Confirm the HUD shows `Build: v3d-volcanic-chemistry-hotspots`.
 - Use mouse wheel or `R` to zoom closer to the surface.
 - Use `WASD` to travel around the globe and find red/orange crater pools.
 
@@ -57,7 +62,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - [ ] Restart dev server.
 - [ ] Hard refresh browser with `Ctrl+F5`.
-- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-surface-craters-log-below`.
+- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-volcanic-chemistry-hotspots`.
 - [ ] Temporarily add bright lava locator beacons if lava is too hard to find at planetary scale.
 
 ## Handoff For Tomorrow

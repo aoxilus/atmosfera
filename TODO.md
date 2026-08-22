@@ -92,6 +92,15 @@ Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteo
 - [x] Run tests and build.
 - [x] Update `PROGRESS.md`.
 
+## Current Volcanic Chemistry Distribution Pass
+
+- [x] Make volcano craters low-poly polygons with varied sizes instead of perfect circles.
+- [x] Make volcanoes emit metallic elements and occasional molecules.
+- [x] Make atom/molecule distribution non-uniform across the surface using hotspots.
+- [x] Prevent camera/focus from going below the terrain surface.
+- [x] Slow ocean/lava tide timing further to remove vibration.
+- [x] Update tests/docs, run build, and push.
+
 ## Completed
 
 - [x] Initial Vite project runs locally.

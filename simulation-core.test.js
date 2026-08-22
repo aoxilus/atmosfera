@@ -3,7 +3,7 @@ import { BUILD_LABEL, LAVA_COUNT, PLANET_RADIUS, TIDE_SPEED, classifyReaction, l
 
 describe('simulation constants', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3d-interaction-log-restored');
+    expect(BUILD_LABEL).toBe('v3d-surface-craters-log-below');
   });
 
   it('keeps the large planet and 5x lava count', () => {

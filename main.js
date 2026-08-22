@@ -136,6 +136,11 @@ function randomSurfacePoint(radius = planetRadius) {
   return direction.multiplyScalar(radius);
 }
 
+function surfacePointWithAltitude(altitude = 80) {
+  const direction = randomSurfacePoint(1).normalize();
+  return direction.multiplyScalar(planetRadius + terrainHeight(direction) + altitude);
+}
+
 function terrainHeight(direction) {
   return getTerrainHeight(direction, planetRadius);
 }
@@ -194,22 +199,24 @@ function makeVolcanoes() {
   for (let i = 0; i < LAVA_COUNT; i += 1) {
     const direction = randomSurfacePoint(1).normalize();
     const volcano = new THREE.Group();
-    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + 960));
+    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 18));
     volcano.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(82, 130, 44, 7), materials.mountain);
-    base.position.y = 12;
-    base.castShadow = true;
-    volcano.add(base);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(120, 12, 5, 18), materials.mountain);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 3;
+    rim.castShadow = true;
+    volcano.add(rim);
 
-    const crater = new THREE.Mesh(new THREE.CylinderGeometry(54, 44, 6, 12), materials.lava.clone());
-    crater.position.y = 39;
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(96, 18), materials.lava.clone());
+    crater.rotation.x = -Math.PI / 2;
+    crater.position.y = 5;
     crater.userData.phase = Math.random() * Math.PI * 2;
     lavaPools.push(crater);
     volcano.add(crater);
 
-    const glow = new THREE.PointLight('#ff4a10', 8, 360);
-    glow.position.y = 62;
+    const glow = new THREE.PointLight('#ff4a10', 3.2, 520);
+    glow.position.y = 34;
     volcano.add(glow);
 
     planet.add(volcano);
@@ -243,7 +250,7 @@ function makeParticleMesh(kind) {
   return new THREE.Mesh(geometry, material);
 }
 
-function spawnParticle(kind = pickAtom(), position = randomSurfacePoint(planetRadius + 420 + Math.random() * 520)) {
+function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(45 + Math.random() * 155)) {
   if (particles.length > 520) return;
   const mesh = makeParticleMesh(kind);
   mesh.position.copy(position);
@@ -262,13 +269,13 @@ function spawnParticle(kind = pickAtom(), position = randomSurfacePoint(planetRa
 
 function seedOrganics() {
   const organics = atoms.filter((atom) => ['C', 'H', 'O', 'N', 'P', 'S'].includes(atom.key));
-  for (let i = 0; i < 75; i += 1) spawnParticle(organics[Math.floor(Math.random() * organics.length)], randomSurfacePoint(planetRadius + 210 + Math.random() * 360));
+  for (let i = 0; i < 75; i += 1) spawnParticle(organics[Math.floor(Math.random() * organics.length)], surfacePointWithAltitude(25 + Math.random() * 80));
   addEvent('Organic-rich compounds seeded near the ocean skin.');
 }
 
 function meteorStorm() {
   for (let i = 0; i < 18; i += 1) {
-    const target = randomSurfacePoint(planetRadius + 450);
+    const target = surfacePointWithAltitude(120);
     const start = target.clone().normalize().multiplyScalar(planetRadius + 18000 + Math.random() * 9000);
     const meteor = new THREE.Mesh(new THREE.IcosahedronGeometry(12 + Math.random() * 10, 0), materials.meteor);
     meteor.position.copy(start);
@@ -321,10 +328,10 @@ function combine(a, b) {
   b.dead = true;
 
   if (previousStage === 'atom' && stage === 'molecule' && Math.random() < 0.34) {
-    addEvent(`${atomsJoined.slice(0, 4).join('-')} atoms bonded into a molecule.`);
+    addEvent(`Atom interaction: ${atomsJoined.slice(0, 4).join('-')} bonded into an early molecule.`);
   }
   if (previousStage !== 'polymer' && stage === 'polymer') {
-    addEvent('Organic molecules linked into a polymer chain.');
+    addEvent('Molecule intelligence increased: organic units linked into a polymer chain.');
   }
 }
 
@@ -348,18 +355,21 @@ function reactVisibleParticles() {
 }
 
 function updateParticles(delta) {
-  if (tick % 4 === 0) spawnParticle(undefined, focus.clone().add(randomSurfacePoint(260 + Math.random() * 520)));
+  if (tick % 4 === 0) spawnParticle(undefined, focus.clone().normalize().multiplyScalar(planetRadius + 70 + Math.random() * 140));
   if (tick % 420 === 0) addEvent('Local atoms drift through wind, gravity, and tide zones.');
   for (const particle of particles) {
     const position = particle.mesh.position;
-    const surface = position.clone().normalize().multiplyScalar(planetRadius + 4);
-    const gravity = surface.sub(position).multiplyScalar(0.011);
+    const direction = position.clone().normalize();
+    const surface = direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 45);
+    const gravity = surface.sub(position).multiplyScalar(0.018);
     particle.velocity.add(gravity);
     particle.velocity.multiplyScalar(0.986);
     position.addScaledVector(particle.velocity, delta * 55);
 
-    if (position.length() < planetRadius + 120) {
-      position.normalize().multiplyScalar(planetRadius + 120);
+    const minSurface = position.clone().normalize();
+    const minRadius = planetRadius + terrainHeight(minSurface) + 24;
+    if (position.length() < minRadius) {
+      position.normalize().multiplyScalar(minRadius);
       particle.velocity.multiplyScalar(-0.25);
     }
     particle.mesh.rotation.x += delta * 0.9;
@@ -377,7 +387,7 @@ function updateMeteors() {
     meteor.rotation.y += 0.08;
     meteor.userData.life -= 1;
     if (meteor.position.length() < planetRadius + 6 || meteor.userData.life <= 0) {
-      for (let j = 0; j < 8; j += 1) spawnParticle(undefined, meteor.position.clone().add(randomSurfacePoint(10)));
+      for (let j = 0; j < 8; j += 1) spawnParticle(undefined, surfacePointWithAltitude(30 + Math.random() * 120));
       addEvent('Meteor impact scattered new reactive atoms.');
       meteorGroup.remove(meteor);
       meteor.geometry.dispose();

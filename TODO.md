@@ -82,6 +82,16 @@ Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteo
 - [x] Run `npm run build`.
 - [x] Push to GitHub if authentication allows.
 
+## Current UX Volcano Chemistry Pass
+
+- [x] Move Interaction Log below the planet viewer.
+- [x] Show Atom Distribution below the viewer so it is not hidden in the side HUD.
+- [x] Replace spaceship-looking volcanoes with surface crater lava pools.
+- [x] Keep chemistry particles on or close to the planet surface instead of floating far away.
+- [x] Restore detailed chemistry narration: atom, molecule, polymer, protocell, primitive life.
+- [x] Run tests and build.
+- [x] Update `PROGRESS.md`.
+
 ## Completed
 
 - [x] Initial Vite project runs locally.

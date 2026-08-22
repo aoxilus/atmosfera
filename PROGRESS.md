@@ -2,7 +2,7 @@
 
 ## Current Visible Build
 
-`v3d-interaction-log-restored`
+`v3d-surface-craters-log-below`
 
 This label is shown in the HUD under `Build`. If the browser does not show this exact label, it is displaying an old cached/server version.
 
@@ -18,6 +18,10 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 - Lava/volcano count is `45`.
 - Chemistry particles are small relative to the planet.
 - Interaction Log panel is restored and explicitly named in the HUD.
+- Interaction Log now sits below the planet viewer, not inside the side HUD.
+- Atom Distribution now sits below the planet viewer so it is easier to see.
+- Volcanoes are now surface crater lava pools, not raised cone/spaceship shapes.
+- Chemistry particles are pulled toward the surface/low atmosphere instead of floating high above the planet.
 - Local atoms spawn more often near the camera focus so interactions are easier to see at planet scale.
 - Mouse drag controls camera look/orbit.
 - Mouse wheel controls zoom.
@@ -36,7 +40,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - Open `http://127.0.0.1:5173`.
 - Hard refresh with `Ctrl+F5`.
-- Confirm the HUD shows `Build: v3d-interaction-log-restored`.
+- Confirm the HUD shows `Build: v3d-surface-craters-log-below`.
 - Use mouse wheel or `R` to zoom closer to the surface.
 - Use `WASD` to travel around the globe and find red/orange crater pools.
 
@@ -53,7 +57,7 @@ This label is shown in the HUD under `Build`. If the browser does not show this 
 
 - [ ] Restart dev server.
 - [ ] Hard refresh browser with `Ctrl+F5`.
-- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-interaction-log-restored`.
+- [ ] Open with cache-busting URL: `http://127.0.0.1:5173/?v=v3d-surface-craters-log-below`.
 - [ ] Temporarily add bright lava locator beacons if lava is too hard to find at planetary scale.
 
 ## Handoff For Tomorrow

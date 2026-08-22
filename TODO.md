@@ -101,6 +101,13 @@ Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteo
 - [x] Slow ocean/lava tide timing further to remove vibration.
 - [x] Update tests/docs, run build, and push.
 
+## Current Anchored Volcano Pass
+
+- [x] Make each volcano mountain/cone extend down into the terrain.
+- [x] Keep polygon lava as the top crater surface.
+- [x] Remove floating-ring volcano appearance.
+- [x] Run tests/build and push.
+
 ## Completed
 
 - [x] Initial Vite project runs locally.

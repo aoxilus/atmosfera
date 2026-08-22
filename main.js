@@ -211,25 +211,34 @@ function makeVolcanoes() {
     const direction = pickHotspotDirection();
     const radius = 55 + Math.random() * 135;
     const segments = 5 + Math.floor(Math.random() * 6);
+    const height = 120 + Math.random() * 210;
+    const baseRadius = radius * (1.45 + Math.random() * 0.65);
+    const craterRadius = radius * 0.58;
     const volcano = new THREE.Group();
-    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 18));
+    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) - height * 0.28));
     volcano.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-    const rim = new THREE.Mesh(new THREE.RingGeometry(radius * 0.72, radius, segments), materials.mountain);
-    rim.rotation.x = Math.PI / 2;
-    rim.position.y = 3;
+    const cone = new THREE.Mesh(new THREE.CylinderGeometry(craterRadius, baseRadius, height, segments), materials.mountain);
+    cone.position.y = height * 0.5;
+    cone.castShadow = true;
+    cone.receiveShadow = true;
+    volcano.add(cone);
+
+    const rim = new THREE.Mesh(new THREE.RingGeometry(craterRadius * 0.72, craterRadius * 1.18, segments), materials.mountain);
+    rim.rotation.x = -Math.PI / 2;
+    rim.position.y = height + 2;
     rim.castShadow = true;
     volcano.add(rim);
 
-    const crater = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.68, segments), materials.lava.clone());
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(craterRadius * 0.74, segments), materials.lava.clone());
     crater.rotation.x = -Math.PI / 2;
-    crater.position.y = 5;
+    crater.position.y = height + 4;
     crater.userData.phase = Math.random() * Math.PI * 2;
     lavaPools.push(crater);
     volcano.add(crater);
 
     const glow = new THREE.PointLight('#ff4a10', 3.2, 520);
-    glow.position.y = 34;
+    glow.position.y = height + 30;
     volcano.add(glow);
 
     planet.add(volcano);

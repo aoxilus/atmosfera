@@ -1,3 +1,8 @@
+/**
+ * simulation-core.test.js — unit test suite for atmosfera core logic.
+ * 🥑 by aoxilus · CC BY-NC-SA 4.0
+ */
+
 import { describe, expect, it } from 'vitest';
 import { BUILD_LABEL, LAVA_COUNT, PLANET_RADIUS, TIDE_SPEED, classifyReaction, lavaPulse, terrainHeight, tideScale } from './simulation-core.js';
 

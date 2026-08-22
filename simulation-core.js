@@ -1,3 +1,8 @@
+/**
+ * simulation-core.js — pure deterministic rules and scale constants for atmosfera.
+ * 🥑 by aoxilus · CC BY-NC-SA 4.0
+ */
+
 export const PLANET_RADIUS = 13200;
 export const TIDE_SPEED = 0.0009;
 export const LAVA_COUNT = 45;

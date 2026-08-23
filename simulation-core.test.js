@@ -4,11 +4,22 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BUILD_LABEL, LAVA_COUNT, PLANET_RADIUS, TIDE_SPEED, classifyReaction, lavaPulse, terrainHeight, tideScale } from './simulation-core.js';
+import {
+  BUILD_LABEL,
+  LAVA_COUNT,
+  PLANET_RADIUS,
+  TIDE_SPEED,
+  VOLCANIC_COMPOUNDS,
+  classifyReaction,
+  lavaPulse,
+  reactionProbability,
+  terrainHeight,
+  tideScale,
+} from './simulation-core.js';
 
-describe('simulation constants', () => {
+describe('simulation constants and geochemistry', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3d-nonblocking-volcanic-emissions');
+    expect(BUILD_LABEL).toBe('v3f-rich-geochemistry-translucent-clouds-smooth-tides');
   });
 
   it('keeps the large planet and 5x lava count', () => {
@@ -16,8 +27,18 @@ describe('simulation constants', () => {
     expect(LAVA_COUNT).toBe(45);
   });
 
-  it('uses very slow tide timing to avoid vibration', () => {
-    expect(TIDE_SPEED).toBeLessThan(0.03 / 16);
+  it('exports diverse prebiotic volcanic compounds beyond just Fe', () => {
+    expect(VOLCANIC_COMPOUNDS.length).toBeGreaterThanOrEqual(6);
+    const keys = VOLCANIC_COMPOUNDS.map((c) => c.key);
+    expect(keys).toContain('Fe-S');
+    expect(keys).toContain('H2S');
+    expect(keys).toContain('HCN');
+    expect(keys).toContain('PolyP');
+    expect(keys).toContain('NH3');
+  });
+
+  it('uses calibrated visible tide timing', () => {
+    expect(TIDE_SPEED).toBe(0.0032);
   });
 });
 
@@ -38,9 +59,9 @@ describe('terrainHeight', () => {
 });
 
 describe('tide and lava motion', () => {
-  it('keeps ocean tide subtle', () => {
+  it('keeps ocean tide smooth, visible, and bounded without vibration', () => {
     expect(tideScale(0)).toBeCloseTo(1);
-    expect(Math.abs(tideScale(1000) - 1)).toBeLessThanOrEqual(0.00075);
+    expect(Math.abs(tideScale(1000) - 1)).toBeLessThanOrEqual(0.0053);
   });
 
   it('keeps lava pulse normalized', () => {
@@ -51,26 +72,43 @@ describe('tide and lava motion', () => {
   });
 });
 
+describe('reactionProbability', () => {
+  it('calculates higher probability for close proximity, catalysts, and tidal pools', () => {
+    const farProb = reactionProbability({ distance: 30, maxDistance: 24 });
+    expect(farProb).toBe(0);
+
+    const closeProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5 });
+    const catalyzedProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5, hasCatalyst: true });
+    const tidalProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5, hasCatalyst: true, isTidalPool: true });
+
+    expect(closeProb).toBeGreaterThan(0);
+    expect(catalyzedProb).toBeGreaterThan(closeProb);
+    expect(tidalProb).toBeGreaterThan(catalyzedProb);
+  });
+});
+
 describe('classifyReaction', () => {
   it('forms molecule by default', () => {
     expect(classifyReaction({ atomKeys: ['H', 'O'], organicScore: 2 }).stage).toBe('molecule');
   });
 
-  it('forms polymer from rich organic chains', () => {
-    const result = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'P'], organicScore: 15 });
-    expect(result.stage).toBe('polymer');
-    expect(result.messages).toContain('Organic molecules linked into a polymer chain.');
+  it('catalyzes polymer formation when Fe-S minerals are present', () => {
+    const withoutFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N'], organicScore: 9 });
+    const withFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'Fe', 'S'], organicScore: 9 });
+    expect(withoutFeS.stage).toBe('molecule');
+    expect(withFeS.stage).toBe('polymer');
+    expect(withFeS.messages).toContain('Fe-S minerals catalyzed organic units into a stable polymer chain.');
   });
 
   it('forms protocell when phosphorus, sulfur, and energy are present', () => {
-    const result = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 18, energy: 0.8 });
+    const result = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 16, energy: 0.75 });
     expect(result.stage).toBe('protocell');
-    expect(result.messages).toContain('A protocell formed on the visible planet surface.');
+    expect(result.messages).toContain('A membrane-bound protocell formed near a hydrothermal mineral boundary.');
   });
 
   it('forms organism from protocell with enough score and energy', () => {
-    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 20, energy: 0.7 });
+    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 18, energy: 0.65 });
     expect(result.stage).toBe('organism');
-    expect(result.messages).toContain('Primitive life emerged in a warm tidal zone.');
+    expect(result.messages).toContain('Primitive metabolic life emerged in a warm tidal zone.');
   });
 });

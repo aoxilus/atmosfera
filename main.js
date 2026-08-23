@@ -4,7 +4,17 @@
  */
 
 import * as THREE from 'three';
-import { BUILD_LABEL, LAVA_COUNT, PLANET_RADIUS, TIDE_SPEED, clamp, terrainHeight as getTerrainHeight } from './simulation-core.js';
+import {
+  BUILD_LABEL,
+  LAVA_COUNT,
+  PLANET_RADIUS,
+  TIDE_SPEED,
+  VOLCANIC_COMPOUNDS,
+  clamp,
+  classifyReaction,
+  reactionProbability,
+  terrainHeight as getTerrainHeight,
+} from './simulation-core.js';
 
 const canvas = document.querySelector('#world');
 
@@ -47,6 +57,8 @@ const events = [];
 const lavaPools = [];
 const volcanoVents = [];
 const chemistryHotspots = [];
+const clouds = [];
+const windParticles = [];
 const keys = new Set();
 const pointer = { dragging: false, x: 0, y: 0 };
 const clock = new THREE.Clock();
@@ -114,8 +126,31 @@ const materials = {
   land: new THREE.MeshStandardMaterial({ color: '#41533d', roughness: 0.95, flatShading: true }),
   highland: new THREE.MeshStandardMaterial({ color: '#6b7053', roughness: 0.95, flatShading: true }),
   mountain: new THREE.MeshStandardMaterial({ color: '#7d766a', roughness: 0.96, flatShading: true }),
-  ocean: new THREE.MeshStandardMaterial({ color: '#0c6381', roughness: 0.72, metalness: 0.05, transparent: true, opacity: 0.72, flatShading: true }),
-  cloud: new THREE.MeshStandardMaterial({ color: '#d9f2f0', roughness: 0.8, transparent: true, opacity: 0.35, flatShading: true }),
+  ocean: new THREE.MeshStandardMaterial({
+    color: '#0c6381',
+    roughness: 0.68,
+    metalness: 0.08,
+    transparent: true,
+    opacity: 0.78,
+    flatShading: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -2.0,
+    polygonOffsetUnits: -4.0,
+  }),
+  cloud: new THREE.MeshStandardMaterial({
+    color: '#f0fbff',
+    roughness: 0.92,
+    transparent: true,
+    opacity: 0.32,
+    depthWrite: false,
+    flatShading: true,
+  }),
+  wind: new THREE.MeshBasicMaterial({
+    color: '#8fe1ff',
+    transparent: true,
+    opacity: 0.48,
+    depthWrite: false,
+  }),
   lava: new THREE.MeshStandardMaterial({ color: '#ff5b1a', emissive: '#ff2600', emissiveIntensity: 1.9, roughness: 0.55, flatShading: true }),
   meteor: new THREE.MeshStandardMaterial({ color: '#ffbc6b', emissive: '#ff6a00', emissiveIntensity: 1.3, flatShading: true }),
   atmosphere: new THREE.MeshBasicMaterial({ color: '#8bd7ff', transparent: true, opacity: 0.16, side: THREE.BackSide, depthWrite: false }),
@@ -171,9 +206,11 @@ function makePlanetSurface() {
     const landRadius = planetRadius + height;
     position.setXYZ(i, tempVector.x * landRadius, tempVector.y * landRadius, tempVector.z * landRadius);
 
-    if (height > 7.5) color.set('#8b8171');
-    else if (height > 3.2) color.set('#66734a');
-    else color.set('#3d5438');
+    if (height > 6.5) color.set('#8d8272');
+    else if (height > 3.0) color.set('#5e6d44');
+    else if (height > 0.0) color.set('#344a30');
+    else if (height > -5.0) color.set('#283b27');
+    else color.set('#18241d');
     colors.push(color.r, color.g, color.b);
   }
 
@@ -187,7 +224,7 @@ function makePlanetSurface() {
 }
 
 function makeOcean() {
-  const ocean = new THREE.Mesh(new THREE.IcosahedronGeometry(planetRadius + 140, 7), materials.ocean);
+  const ocean = new THREE.Mesh(new THREE.IcosahedronGeometry(planetRadius + 140, 6), materials.ocean);
   ocean.name = 'ocean';
   planet.add(ocean);
 }
@@ -199,49 +236,114 @@ function makeAtmosphere() {
 }
 
 function makeClouds() {
-  for (let i = 0; i < 26; i += 1) {
-    const cloud = new THREE.Mesh(new THREE.DodecahedronGeometry(6 + Math.random() * 7, 0), materials.cloud);
-    cloud.position.copy(randomSurfacePoint(planetRadius + 2900 + Math.random() * 1000));
-    cloud.scale.set(3.8 + Math.random() * 3.4, 0.7 + Math.random() * 0.6, 1.4 + Math.random() * 1.8);
-    cloud.lookAt(0, 0, 0);
-    cloud.userData.spin = 0.002 + Math.random() * 0.002;
+  const upAxis = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < 48; i += 1) {
+    const direction = randomSurfacePoint(1).normalize();
+    const altitude = planetRadius + 360 + Math.random() * 280;
+    const cloud = new THREE.Group();
+
+    // Multi-part low-poly cloud cluster for stylized realism
+    const mainPuff = new THREE.Mesh(new THREE.DodecahedronGeometry(18 + Math.random() * 22, 0), materials.cloud);
+    mainPuff.scale.set(3.2 + Math.random() * 2.5, 0.6 + Math.random() * 0.35, 1.6 + Math.random() * 1.2);
+    cloud.add(mainPuff);
+
+    const sidePuff = new THREE.Mesh(new THREE.DodecahedronGeometry(12 + Math.random() * 14, 0), materials.cloud);
+    sidePuff.position.set((Math.random() - 0.5) * 45, 0, (Math.random() - 0.5) * 35);
+    sidePuff.scale.set(2.2, 0.55, 1.3);
+    cloud.add(sidePuff);
+
+    cloud.position.copy(direction.clone().multiplyScalar(altitude));
+    cloud.quaternion.setFromUnitVectors(upAxis, direction);
+
+    const latitude = direction.y;
+    const windSpeed = (Math.abs(latitude) < 0.45 ? -0.018 : 0.026) * (0.8 + Math.random() * 0.4);
+    cloud.userData = { altitude, latitude, windSpeed, spin: (Math.random() - 0.5) * 0.003 };
     planet.add(cloud);
+    clouds.push(cloud);
+  }
+}
+
+function makeWindStreams() {
+  const upAxis = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < 260; i += 1) {
+    const direction = randomSurfacePoint(1).normalize();
+    const altitude = planetRadius + 220 + Math.random() * 340;
+    const length = 32 + Math.random() * 55;
+    const windMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 1.1, length),
+      materials.wind
+    );
+    windMesh.position.copy(direction.clone().multiplyScalar(altitude));
+    const latitude = direction.y;
+    const windSpeed = (Math.abs(latitude) < 0.45 ? -0.052 : 0.078) * (0.85 + Math.random() * 0.3);
+    windMesh.userData = { altitude, latitude, windSpeed };
+    planet.add(windMesh);
+    windParticles.push(windMesh);
+  }
+}
+
+function updateWinds(delta) {
+  const upAxis = new THREE.Vector3(0, 1, 0);
+
+  for (const cloud of clouds) {
+    cloud.position.applyAxisAngle(upAxis, cloud.userData.windSpeed * delta);
+    const dir = cloud.position.clone().normalize();
+    cloud.position.copy(dir.multiplyScalar(cloud.userData.altitude));
+    cloud.quaternion.setFromUnitVectors(upAxis, dir);
+    cloud.rotation.y += cloud.userData.spin;
+  }
+
+  for (const wind of windParticles) {
+    wind.position.applyAxisAngle(upAxis, wind.userData.windSpeed * delta);
+    const dir = wind.position.clone().normalize();
+    wind.position.copy(dir.multiplyScalar(wind.userData.altitude));
+    const tangent = new THREE.Vector3().crossVectors(upAxis, dir).normalize();
+    if (wind.userData.windSpeed < 0) tangent.negate();
+    wind.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
   }
 }
 
 function makeVolcanoes() {
   for (let i = 0; i < LAVA_COUNT; i += 1) {
     const direction = pickHotspotDirection();
-    const radius = 55 + Math.random() * 135;
-    const segments = 5 + Math.floor(Math.random() * 6);
-    const height = 120 + Math.random() * 210;
-    const baseRadius = radius * (1.45 + Math.random() * 0.65);
+    const radius = 60 + Math.random() * 140;
+    const segments = 8 + Math.floor(Math.random() * 4);
+    const height = 130 + Math.random() * 210;
+    const baseRadius = radius * (1.6 + Math.random() * 0.7);
     const craterRadius = radius * 0.58;
     const volcano = new THREE.Group();
-    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) - height * 0.28));
+    const surfaceH = terrainHeight(direction);
+
+    // Anchor volcano group firmly at the terrain surface
+    volcano.position.copy(direction.clone().multiplyScalar(planetRadius + surfaceH));
     volcano.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-    const cone = new THREE.Mesh(new THREE.CylinderGeometry(craterRadius, baseRadius, height, segments), materials.mountain);
-    cone.position.y = height * 0.5;
+    // Deep mountain cone extending down into bedrock (3.2x height) to guarantee zero floating edges on slopes
+    const totalLength = height * 3.2;
+    const cone = new THREE.Mesh(
+      new THREE.CylinderGeometry(craterRadius, baseRadius * 2.2, totalLength, segments),
+      materials.mountain
+    );
+    cone.position.y = height - totalLength * 0.5;
     cone.castShadow = true;
     cone.receiveShadow = true;
     volcano.add(cone);
 
-    const rim = new THREE.Mesh(new THREE.RingGeometry(craterRadius * 0.72, craterRadius * 1.18, segments), materials.mountain);
+    const rim = new THREE.Mesh(new THREE.RingGeometry(craterRadius * 0.7, craterRadius * 1.28, segments), materials.mountain);
     rim.rotation.x = -Math.PI / 2;
-    rim.position.y = height + 2;
+    rim.position.y = height + 1;
     rim.castShadow = true;
     volcano.add(rim);
 
-    const crater = new THREE.Mesh(new THREE.CircleGeometry(craterRadius * 0.74, segments), materials.lava.clone());
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(craterRadius * 0.75, segments), materials.lava.clone());
     crater.rotation.x = -Math.PI / 2;
-    crater.position.y = height + 4;
+    crater.position.y = height + 3;
     crater.userData.phase = Math.random() * Math.PI * 2;
     lavaPools.push(crater);
     volcano.add(crater);
 
-    const glow = new THREE.PointLight('#ff4a10', 3.2, 520);
-    glow.position.y = height + 30;
+    const glow = new THREE.PointLight('#ff4a10', 3.5, 620);
+    glow.position.y = height + 28;
     volcano.add(glow);
 
     planet.add(volcano);
@@ -259,21 +361,40 @@ function updateLavaPools() {
 }
 
 function emitVolcanicChemistry() {
-  if (tick % 24 !== 0 || volcanoVents.length === 0) return;
+  if (tick % 20 !== 0 || volcanoVents.length === 0) return;
   const vent = volcanoVents[Math.floor(Math.random() * volcanoVents.length)];
-  const metallic = atoms.filter((atom) => ['Fe', 'Si', 'S', 'P', 'M', 'Ca', 'Na'].includes(atom.key));
+  const metallic = atoms.filter((atom) => ['Fe', 'Si', 'S', 'P', 'M', 'Ca', 'Na', 'C'].includes(atom.key));
   const burstCount = 3 + Math.floor(Math.random() * 4);
+
   for (let i = 0; i < burstCount; i += 1) {
     const kind = metallic[Math.floor(Math.random() * metallic.length)];
     const originDirection = vent.direction.clone().add(randomSurfacePoint(0.015)).normalize();
     spawnParticle(kind, surfacePointWithAltitude(85 + Math.random() * 170, originDirection), {
       scale: 1.35,
-      energy: 0.65 + Math.random() * 0.25,
-      velocity: vent.direction.clone().multiplyScalar(0.34 + Math.random() * 0.28).add(randomSurfacePoint(0.06)),
+      energy: 0.68 + Math.random() * 0.25,
+      velocity: vent.direction.clone().multiplyScalar(0.35 + Math.random() * 0.28).add(randomSurfacePoint(0.06)),
     });
   }
-  if (Math.random() < 0.38) spawnVolcanicMolecule(vent);
-  if (tick % 240 === 0) addEvent('Volcanic crater burst: metallic atoms and Fe-S molecules entered the surface chemistry.');
+
+  // Diverse prebiotic volcanic molecules (Fe-S, H2S, SO2, HCN, CO2, NH3, PolyP)
+  if (Math.random() < 0.45) {
+    const compound = VOLCANIC_COMPOUNDS[Math.floor(Math.random() * VOLCANIC_COMPOUNDS.length)];
+    spawnVolcanicMolecule(vent, compound);
+  }
+
+  if (tick % 240 === 0) {
+    addEvent('Volcanic hydrothermal burst: catalytic minerals and prebiotic molecules entered surface chemistry.');
+  }
+}
+
+function spawnVolcanicMolecule(vent, compound = VOLCANIC_COMPOUNDS[0]) {
+  spawnParticle(compound, surfacePointWithAltitude(110 + Math.random() * 140, vent.direction.clone()), {
+    stage: 'molecule',
+    label: compound.key,
+    scale: 1.85,
+    energy: compound.energy,
+    velocity: vent.direction.clone().multiplyScalar(0.42 + Math.random() * 0.22).add(randomSurfacePoint(0.07)),
+  });
 }
 
 function makeStars() {
@@ -312,17 +433,6 @@ function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(45
   });
 }
 
-function spawnVolcanicMolecule(vent) {
-  const moleculeKind = { key: 'Fe-S', name: 'Iron-sulfur molecule', color: '#ff9a4d', organic: 2 };
-  spawnParticle(moleculeKind, surfacePointWithAltitude(110 + Math.random() * 140, vent.direction.clone()), {
-    stage: 'molecule',
-    label: 'Fe-S',
-    scale: 1.8,
-    energy: 0.75,
-    velocity: vent.direction.clone().multiplyScalar(0.42 + Math.random() * 0.22).add(randomSurfacePoint(0.07)),
-  });
-}
-
 function seedOrganics() {
   const organics = atoms.filter((atom) => ['C', 'H', 'O', 'N', 'P', 'S'].includes(atom.key));
   for (let i = 0; i < 75; i += 1) spawnParticle(organics[Math.floor(Math.random() * organics.length)], surfacePointWithAltitude(25 + Math.random() * 80));
@@ -345,60 +455,63 @@ function meteorStorm() {
 
 function combine(a, b) {
   const previousStage = a.stage;
-  const atomSet = new Set([...a.atoms, ...b.atoms]);
-  const organicScore = a.organic + b.organic + (atomSet.has('C') ? 4 : 0) + (atomSet.has('N') ? 2 : 0) + (atomSet.has('P') ? 3 : 0);
   const atomsJoined = [...a.atoms, ...b.atoms].slice(0, 20);
-  const energy = Math.min(1, (a.energy + b.energy) / 2 + Math.random() * 0.24);
-  let stage = 'molecule';
-  let color = '#8fe1ff';
-  let scale = 1.1;
+  const rawOrganicScore = a.organic + b.organic;
+  const energy = Math.min(1, (a.energy + b.energy) / 2 + Math.random() * 0.22);
+  const altitude = a.mesh.position.length() - planetRadius;
+  const isTidalPool = altitude >= 0 && altitude <= 90;
 
-  if (organicScore >= 13 && atomsJoined.length >= 5) {
-    stage = 'polymer';
-    color = '#7ef0c1';
-    scale = 1.8;
-  }
-
-  if (stage === 'polymer' && atomSet.has('P') && atomSet.has('S') && energy > 0.62) {
-    stage = 'protocell';
-    color = '#ff7bd3';
-    scale = 2.7;
-    addEvent('A protocell formed on the visible planet surface.');
-  }
-
-  if ((a.stage === 'protocell' || b.stage === 'protocell') && organicScore >= 18 && energy > 0.54) {
-    stage = 'organism';
-    color = '#ffe26e';
-    scale = 3.4;
-    addEvent('Primitive life emerged in a warm tidal zone.');
-  }
+  // Run deterministic reaction classification from simulation-core
+  const reaction = classifyReaction({
+    previousStage,
+    atomKeys: atomsJoined,
+    organicScore: rawOrganicScore,
+    energy,
+    isTidalPool,
+  });
 
   a.mesh.position.lerp(b.mesh.position, 0.5);
-  a.mesh.material.color.set(color);
-  a.mesh.material.emissive.set(color);
-  a.mesh.scale.setScalar(scale);
+  a.mesh.material.color.set(reaction.color);
+  a.mesh.material.emissive.set(reaction.color);
+  a.mesh.scale.setScalar(reaction.scale);
   a.atoms = atomsJoined;
-  a.organic = organicScore;
+  a.organic = reaction.effectiveScore;
   a.energy = energy;
-  a.stage = stage;
+  a.stage = reaction.stage;
   b.dead = true;
 
-  if (previousStage === 'atom' && stage === 'molecule' && Math.random() < 0.34) {
-    addEvent(`Atom interaction: ${atomsJoined.slice(0, 4).join('-')} bonded into an early molecule.`);
+  for (const msg of reaction.messages) {
+    addEvent(msg);
   }
-  if (previousStage !== 'polymer' && stage === 'polymer') {
-    addEvent('Molecule intelligence increased: organic units linked into a polymer chain.');
+
+  if (previousStage === 'atom' && reaction.stage === 'molecule' && Math.random() < 0.34) {
+    addEvent(`Prebiotic bonding: ${atomsJoined.slice(0, 4).join('-')} formed an active molecular cluster.`);
   }
 }
 
 function reactVisibleParticles() {
   const visible = particles.filter((particle) => particle.mesh.position.distanceTo(focus) < visibleRadius && !particle.dead);
   const maxChecks = Math.min(reactionCheckBudget, visible.length * 2);
+
   for (let i = 0; i < maxChecks; i += 1) {
     const a = visible[Math.floor(Math.random() * visible.length)];
     const b = visible[Math.floor(Math.random() * visible.length)];
     if (!a || !b || a === b || a.dead || b.dead) continue;
-    if (a.mesh.position.distanceTo(b.mesh.position) < 22 && Math.random() < 0.26) combine(a, b);
+
+    const dist = a.mesh.position.distanceTo(b.mesh.position);
+    const hasCatalyst = a.atoms.includes('Fe') || a.atoms.includes('S') || a.atoms.includes('P') || b.atoms.includes('Fe');
+    const altitude = a.mesh.position.length() - planetRadius;
+    const isTidalPool = altitude >= 0 && altitude <= 90;
+
+    const prob = reactionProbability({
+      distance: dist,
+      maxDistance: 24,
+      energy: (a.energy + b.energy) * 0.5,
+      hasCatalyst,
+      isTidalPool,
+    });
+
+    if (Math.random() < prob) combine(a, b);
   }
 
   for (let i = particles.length - 1; i >= 0; i -= 1) {
@@ -414,6 +527,7 @@ function updateParticles(delta) {
   if (tick % 4 === 0) spawnParticle(undefined, surfacePointWithAltitude(45 + Math.random() * 155, focus.clone().normalize().add(randomSurfacePoint(0.12)).normalize()));
   if (tick % 420 === 0) addEvent('Local atoms drift through wind, gravity, and tide zones.');
   const updates = Math.min(particleUpdateBudget, particles.length);
+
   for (let i = 0; i < updates; i += 1) {
     const particle = particles[particleCursor % particles.length];
     particleCursor += 1;
@@ -425,6 +539,14 @@ function updateParticles(delta) {
     particle.velocity.add(gravity);
     particle.velocity.multiplyScalar(0.986);
     position.addScaledVector(particle.velocity, delta * 55);
+
+    // Tangential atmospheric wind force
+    const upAxis = new THREE.Vector3(0, 1, 0);
+    const windTangent = new THREE.Vector3().crossVectors(upAxis, direction).normalize();
+    const latitude = direction.y;
+    const windStrength = Math.abs(latitude) < 0.45 ? -0.15 : 0.22;
+    if (windStrength < 0) windTangent.negate();
+    particle.velocity.addScaledVector(windTangent, Math.abs(windStrength) * 0.006);
 
     const minSurface = position.clone().normalize();
     const minRadius = planetRadius + terrainHeight(minSurface) + 24;
@@ -505,14 +627,24 @@ function frame() {
     planet.rotation.y += delta * 0.015;
     moon.rotation.y += delta * 0.08;
     moon.rotation.x += delta * 0.025;
+
+    // Dynamic smooth ocean tide without Z-fighting or vibration
     const ocean = planet.getObjectByName('ocean');
-    if (ocean) ocean.scale.setScalar(1 + Math.sin(tick * tideSpeed) * 0.00075);
-    if (tick % 720 === 0) addEvent('Slow tide cycle shifted ocean and lava pools.');
+    if (ocean) {
+      const tideFactor = Math.sin(tick * tideSpeed);
+      ocean.scale.setScalar(1 + tideFactor * 0.0052);
+      if (tick % 540 === 0) {
+        if (tideFactor > 0.65) {
+          addEvent('🌊 High Tide: rising ocean waters submerge coastal shallows and tidal flats.');
+        } else if (tideFactor < -0.65) {
+          addEvent('🏖️ Low Tide: ocean recedes, exposing mineral-rich hydrothermal flats.');
+        }
+      }
+    }
+
+    updateWinds(delta);
     updateLavaPools();
     emitVolcanicChemistry();
-    for (const child of planet.children) {
-      if (child.userData.spin) child.rotation.y += child.userData.spin;
-    }
     updateParticles(delta);
     updateMeteors();
   }
@@ -579,6 +711,7 @@ makePlanetSurface();
 makeOcean();
 makeAtmosphere();
 makeClouds();
+makeWindStreams();
 makeVolcanoes();
 makeStars();
 resize();

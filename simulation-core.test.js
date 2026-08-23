@@ -23,7 +23,7 @@ import {
 
 describe('simulation constants and geochemistry', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3i-interactive-gravity-buoyancy-controls');
+    expect(BUILD_LABEL).toBe('v4-beta-emergence-engine');
   });
 
   it('keeps the large planet and 5x lava count', () => {

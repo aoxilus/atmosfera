@@ -1,69 +1,83 @@
 # atmosfera TODO 🥑
 
-## Current Goal
+## Current Build
 
-Interactive, robust, and beautiful low-poly 3D simulation of planetary abiogenesis, prebiotic chemistry, and motile emergent life with automated GitHub synchronization.
+`v4-beta-emergence-engine` — **⚠️ BETA — Life does not yet emerge reliably on its own.**
+
+The simulation runs, the physics are real, the math is tested — but the visual payoff (watching life spontaneously appear and colonize the oceans) is not yet reliably achievable without clicking buttons.
 
 ---
 
-## Completed Milestones
+## ✅ Completed Milestones
 
 ### 1. 🪐 3D Planet & Rendering Foundation
-- [x] Initial Vite project with Three.js engine.
-- [x] Procedural low-poly globe with multi-octave relief (abyssal basins, coastal shelves, fertile lowlands, rocky mountain summits).
-- [x] Dynamic tidal ocean with smoothed sinusoidal breathing cycle.
-- [x] Zero coastline vibration / Z-fighting via `polygonOffset` and staggered tessellation.
-- [x] Translucent clustered low-poly clouds with depth-independent soft opacity (`opacity: 0.32`, `depthWrite: false`).
-- [x] Flowing atmospheric jet streams and trade wind ribbons (260 flowing wind vectors).
-- [x] Orbiting celestial bodies (Sun directional light + Moon point light with shadows).
-- [x] Atmospheric scattering glow shell.
+- [x] Vite + Three.js planet globe, multi-octave procedural terrain.
+- [x] Dynamic tidal ocean, zero Z-fighting via `polygonOffset` and staggered tessellation.
+- [x] Translucent clustered low-poly clouds with atmospheric drift.
+- [x] Orbiting Sun (directional light) and Moon (point light + shadows).
+- [x] Atmospheric scattering glow shell and star field.
 
 ### 2. 🌋 Geochemistry & Volcanic Systems
-- [x] 45 active volcanic craters deeply anchored $3.2\times$ into planetary bedrock (zero floating edges on slopes).
-- [x] Synchronized magma crater pulsing with red/orange thermal emissions.
-- [x] Multi-compound volcanic eruptions (`Fe-S`, `H2S`, `SO2`, `HCN`, `CO2`, `NH3`, `PolyP`).
-- [x] Mineral ash and reactive metal bursts (`Fe`, `Si`, `S`, `P`, `Ca`, `Na`, `C`, `M`).
+- [x] 45 active volcanic craters deeply anchored into planetary bedrock.
+- [x] Synchronized lava pulsing with thermal emissions.
+- [x] 7 prebiotic volcanic compound types (`Fe-S`, `H2S`, `SO2`, `HCN`, `CO2`, `NH3`, `PolyP`).
 - [x] Meteor storm impacts delivering cosmic interstellar atoms.
 
-### 3. 🧪 Abiogenesis Rule Ladder & Mathematical Engine
-- [x] 12 Earth-inspired primordial elements with calibrated weights and organic scores.
-- [x] Deterministic reaction classification (`classifyReaction()`).
-- [x] Mathematical reaction probability engine (`reactionProbability()`).
-- [x] Catalytic acceleration from Iron-Sulfur (`Fe-S`) minerals and polyphosphate chains.
-- [x] Tidal pool concentration bonuses in coastal shallows.
-- [x] Real-time Abiogenesis Probability Calculator matrix.
+### 3. 🧪 Abiogenesis Rule Engine
+- [x] 12 primordial elements with calibrated organic scores.
+- [x] Deterministic `classifyReaction()` — atoms → molecule → polymer → protocell → organism → complex.
+- [x] `reactionProbability()` with proximity, catalyst, and tidal-pool bonuses.
+- [x] Real-time Abiogenesis Probability Calculator matrix in HUD.
 
-### 4. 🧬 Motile Life, Locomotion & Mitosis
-- [x] **Protocells (`#ff7bd3`)**: Membrane breathing pulsation and littoral creeping.
-- [x] **Primitive Organisms (`#ffe26e`)**: Autonomous sinusoidal swimming locomotion ($95 \text{ units/s}$), cilia rotation, and active nutrient feeding.
-- [x] **Complex Colonial Life (`#00ffd5`)**: High-speed swimming ($140 \text{ units/s}$) with **Cellular Mitosis** (replication upon energy saturation).
-- [x] Frame-budgeted non-blocking simulation loop locked at 60 FPS.
+### 4. ⚡ Gravity & Buoyancy Physics
+- [x] Deterministic inward planetary gravity.
+- [x] Organic particle ocean buoyancy with harmonic wave bobbing.
+- [x] Mineral sinking to seabed (negative buoyancy).
+- [x] Interactive gravity preset buttons (`Earth`, `Super-Earth`, `Low-G Moon`).
+- [x] Interactive buoyancy mode buttons (`Active`, `Hyper-Buoyant`, `Dense Fluid`).
+- [x] Floating vs Seabed telemetry counters in HUD.
 
-### 5. 🎮 User Interface & Telemetry
-- [x] Free hybrid navigation (WASD, Q/E yaw, mouse drag orbit, mouse wheel / R/F altitude zoom, Shift turbo).
-- [x] Surface collision clamping preventing camera from going below ground.
-- [x] Telemetry HUD: Atoms, Molecules, Polymers, Protocells, Organisms, Complex Life, Era, and Build label.
-- [x] Interactive controls: `Pause / Resume`, `Seed organics`, `Catalyze life`, `Meteor storm`.
-- [x] Chronological Interaction Log feed.
+### 5. 🧬 Motile Life & Mitosis
+- [x] Protocell membrane pulsation.
+- [x] Organism autonomous sinusoidal swimming and cilia rotation.
+- [x] Active nutrient feeding (organisms absorb nearby atoms).
+- [x] Cellular mitosis (division when energy > 0.78 and consumed ≥ 1).
 
-### 6. 📚 Documentation, Branding & Automation
-- [x] Full bilingual GitHub documentation (`README.md` and `README.es.md`).
-- [x] Standard AOXILUS public branding (🥑 icon, CC BY-NC-SA 4.0 license, clean headers).
-- [x] Automation scripts: `push-github.ps1` and `push-github.bat` for one-click commit, backup, and push to GitHub.
-- [x] Vitest test suite (`14/14 tests passing`).
-- [x] Synchronized remote repository on GitHub: [https://github.com/aoxilus/atmosfera](https://github.com/aoxilus/atmosfera).
+### 6. 🔧 Emergence Engine Fixes (v4-beta)
+- [x] Particles no longer destroyed on combine — B atom survives as free atom.
+- [x] 6 tidal hotspot concentrators draw molecules toward coastal basins.
+- [x] Advanced-stage particles protected from pool eviction (only atoms evicted).
+- [x] Lowered emergence thresholds: polymer ≥6, protocell >0.38, organism ≥10, complex ≥16.
+- [x] Mitosis thresholds relaxed: energy >0.78, consumed ≥1, probability 12%.
+
+### 7. 📚 Documentation & Automation
+- [x] Bilingual GitHub docs (`README.md`, `README.es.md`).
+- [x] `PROGRESS.md` with beta status and known issues table.
+- [x] `push-github.ps1` + `push-github.bat` one-click backup automation.
+- [x] `matrix-stream.js` — CLI matrix telemetry feed (`npm run matrix`).
+- [x] 16/16 Vitest unit tests passing.
 
 ---
 
-## 🔮 Future Roadmap / Next Ideas
+## 🔴 Open Issues (Must Fix for Life to Emerge)
 
-- [ ] **Log Export to Disk**: Add button to export simulation interaction logs as a `.txt` or `.json` file.
-- [ ] **Genetic Mutation & Trait Evolution**: Introduce simple genetic bitmasks for organisms (speed, light attraction, thermal tolerance).
-- [ ] **Biome Differentiation**: Distinct environmental zones (Hydrothermal vents, Glacial polar ice, Shallow coral-like reefs, Volcanic archipelagos).
-- [ ] **Surface Walking / Probe Mode**: Ground-level exploration mode with first-person surface rover view.
-- [ ] **Sound & Ambient Audio**: Procedural synthesized wind currents, ocean waves, volcanic rumblings, and chiming prebiotic bonding sounds (Web Audio API).
-- [ ] **Save & Load World State**: Export and import world seeds and particle snapshots via JSON / LocalStorage.
-- [ ] **GitHub Pages Deployment**: Automated GitHub Actions workflow to publish the live 3D simulation to web.
+- [ ] **Organism energy drain too fast**: Organisms lose energy and die before finding food. Need passive energy regeneration from ambient heat/sunlight.
+- [ ] **No visible emergence event**: When a protocell or organism forms, there is no flash, ring, or visual cue. Add a visible burst/glow effect.
+- [ ] **Food desert problem**: Atoms spread across the whole planet; organisms swim in food-sparse zones. Hotspot food density must be higher.
+- [ ] **Organisms don't leave nutrients on death**: When an organism dies, it vanishes. It should release 2-3 atom particles as food for neighbors.
+- [ ] **Tidal concentration not strong enough**: Molecules are gently attracted but don't visibly cluster. Increase attractor force inside < 800 units of hotspot center.
+
+---
+
+## 🔮 Future Roadmap
+
+- [ ] **Genetic Mutation & Traits**: Speed, light attraction, thermal tolerance bitmask per organism.
+- [ ] **Biome Zones**: Distinct hydrothermal vents, glacial poles, shallow reef zones.
+- [ ] **Sound & Ambient Audio**: Procedural wind, ocean, volcanic, and bonding chime sounds (Web Audio API).
+- [ ] **Surface / Probe Mode**: First-person ground-level exploration rover camera.
+- [ ] **Save & Load World**: Export/import world seeds and particle snapshots as JSON.
+- [ ] **Log Export**: Button to save interaction log as `.txt` or `.json`.
+- [ ] **GitHub Pages Deployment**: Automated GitHub Actions for live public URL.
 
 ---
 

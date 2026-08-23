@@ -20,7 +20,7 @@ import {
 
 describe('simulation constants and geochemistry', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3g-motile-organisms-mitosis-abiogenesis-odds');
+    expect(BUILD_LABEL).toBe('v3h-true-gravity-ocean-buoyancy-motility');
   });
 
   it('keeps the large planet and 5x lava count', () => {

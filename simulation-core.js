@@ -6,7 +6,7 @@
 export const PLANET_RADIUS = 13200;
 export const TIDE_SPEED = 0.0032;
 export const LAVA_COUNT = 45;
-export const BUILD_LABEL = 'v3g-motile-organisms-mitosis-abiogenesis-odds';
+export const BUILD_LABEL = 'v3h-true-gravity-ocean-buoyancy-motility';
 
 export const VOLCANIC_COMPOUNDS = [
   { key: 'Fe-S', name: 'Iron-Sulfur catalyst cluster', color: '#ff9a4d', organic: 3, energy: 0.85 },

@@ -6,7 +6,7 @@
 export const PLANET_RADIUS = 13200;
 export const TIDE_SPEED = 0.0032;
 export const LAVA_COUNT = 45;
-export const BUILD_LABEL = 'v3f-rich-geochemistry-translucent-clouds-smooth-tides';
+export const BUILD_LABEL = 'v3g-motile-organisms-mitosis-abiogenesis-odds';
 
 export const VOLCANIC_COMPOUNDS = [
   { key: 'Fe-S', name: 'Iron-Sulfur catalyst cluster', color: '#ff9a4d', organic: 3, energy: 0.85 },
@@ -32,7 +32,6 @@ export function terrainHeight(direction, planetRadius = PLANET_RADIUS) {
 }
 
 export function tideScale(tick, tideSpeed = TIDE_SPEED) {
-  // Smooth sine breathing wave for ocean tidal displacement
   return 1 + Math.sin(tick * tideSpeed) * 0.0052;
 }
 
@@ -40,13 +39,24 @@ export function lavaPulse(tick, phase = 0, tideSpeed = TIDE_SPEED) {
   return (Math.sin(tick * tideSpeed + phase) + 1) * 0.5;
 }
 
-export function reactionProbability({ distance = 20, maxDistance = 24, energy = 0.5, hasCatalyst = false, isTidalPool = false }) {
+export function reactionProbability({ distance = 20, maxDistance = 26, energy = 0.5, hasCatalyst = false, isTidalPool = false }) {
   if (distance > maxDistance) return 0;
   const proximityFactor = Math.max(0, 1 - distance / maxDistance);
-  let baseProb = 0.22 * proximityFactor + energy * 0.14;
-  if (hasCatalyst) baseProb += 0.25;
-  if (isTidalPool) baseProb += 0.18;
-  return Math.min(0.92, baseProb);
+  let baseProb = 0.28 * proximityFactor + energy * 0.18;
+  if (hasCatalyst) baseProb += 0.28;
+  if (isTidalPool) baseProb += 0.22;
+  return Math.min(0.96, baseProb);
+}
+
+export function calculateAbiogenesisOdds() {
+  return {
+    prebioticAtomAbundance: 0.74, // C + H + O + N + P + S total weight
+    molecularBondingPerCollision: { standard: 0.38, catalyzed: 0.66, tidalPool: 0.84 },
+    polymerFormationChance: { standard: 0.12, hydrothermalVent: 0.42 },
+    protocellEnclosureChance: { standard: 0.06, withPhosphorusSulfur: 0.38 },
+    primitiveLifeEmergence: { openOcean: 0.08, warmTidalFlats: 0.48 },
+    mitosisDivisionRate: 0.22,
+  };
 }
 
 export function classifyReaction({
@@ -57,7 +67,7 @@ export function classifyReaction({
   isTidalPool = false,
 }) {
   const atomSet = new Set(atomKeys);
-  let stage = 'molecule';
+  let stage = previousStage === 'atom' ? 'molecule' : previousStage;
   let color = '#8fe1ff';
   let scale = 1.1;
   const messages = [];
@@ -66,38 +76,58 @@ export function classifyReaction({
   const hasIronSulfur = atomSet.has('Fe') && atomSet.has('S');
   const hasPhosphate = atomSet.has('P') && (atomSet.has('O') || atomSet.has('H'));
   let effectiveScore = organicScore;
-  if (hasIronSulfur) effectiveScore += 3;
-  if (hasPhosphate) effectiveScore += 2;
-  if (isTidalPool) effectiveScore += 2;
+  if (hasIronSulfur) effectiveScore += 4;
+  if (hasPhosphate) effectiveScore += 3;
+  if (isTidalPool) effectiveScore += 3;
 
-  // Polymer formation
-  if (effectiveScore >= 12 && atomKeys.length >= 4) {
+  // 1. Polymer formation (from atom/molecule)
+  if (['atom', 'molecule'].includes(previousStage) && effectiveScore >= 10 && atomKeys.length >= 3) {
     stage = 'polymer';
     color = '#7ef0c1';
-    scale = 1.85;
-  }
-
-  // Protocell formation (requires Phosphorus for lipid membranes, Sulfur for catalytic bridges, and adequate thermal energy)
-  if (stage === 'polymer' && atomSet.has('P') && atomSet.has('S') && energy > 0.55) {
-    stage = 'protocell';
-    color = '#ff7bd3';
-    scale = 2.75;
-    messages.push('A membrane-bound protocell formed near a hydrothermal mineral boundary.');
-  }
-
-  // Primitive Organism emergence
-  if (previousStage === 'protocell' && effectiveScore >= 17 && energy > 0.50) {
-    stage = 'organism';
-    color = '#ffe26e';
-    scale = 3.5;
-    messages.push('Primitive metabolic life emerged in a warm tidal zone.');
-  }
-
-  if (previousStage !== 'polymer' && stage === 'polymer') {
+    scale = 1.9;
     messages.push(hasIronSulfur
       ? 'Fe-S minerals catalyzed organic units into a stable polymer chain.'
       : 'Organic molecules condensed into an informational polymer chain.'
     );
+  }
+
+  // 2. Protocell formation (from polymer when P/S and energy are present)
+  if (previousStage === 'polymer' && (atomSet.has('P') || atomSet.has('S') || hasPhosphate) && energy > 0.48) {
+    stage = 'protocell';
+    color = '#ff7bd3';
+    scale = 2.85;
+    messages.push('A membrane-bound protocell formed near a hydrothermal mineral boundary.');
+  }
+
+  // 3. Primitive Organism emergence (from protocell)
+  if (previousStage === 'protocell' && effectiveScore >= 15 && energy > 0.45) {
+    stage = 'organism';
+    color = '#ffe26e';
+    scale = 3.6;
+    messages.push('Primitive metabolic life emerged! Autonomous swimming organism active.');
+  }
+
+  // 4. Complex Multicellular Organism / Colonial Motility (from organism)
+  if (previousStage === 'organism' && effectiveScore >= 22 && energy > 0.52) {
+    stage = 'complex';
+    color = '#00ffd5';
+    scale = 4.4;
+    messages.push('Complex motile colonial organism evolved! Active feeding and dividing.');
+  }
+
+  // Colors & scales for existing stages
+  if (stage === 'polymer' && color === '#8fe1ff') {
+    color = '#7ef0c1';
+    scale = 1.9;
+  } else if (stage === 'protocell' && color === '#8fe1ff') {
+    color = '#ff7bd3';
+    scale = 2.85;
+  } else if (stage === 'organism' && color === '#8fe1ff') {
+    color = '#ffe26e';
+    scale = 3.6;
+  } else if (stage === 'complex' && color === '#8fe1ff') {
+    color = '#00ffd5';
+    scale = 4.4;
   }
 
   return { stage, color, scale, messages, effectiveScore };

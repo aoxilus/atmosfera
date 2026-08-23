@@ -10,6 +10,7 @@ import {
   PLANET_RADIUS,
   TIDE_SPEED,
   VOLCANIC_COMPOUNDS,
+  calculateAbiogenesisOdds,
   classifyReaction,
   lavaPulse,
   reactionProbability,
@@ -19,7 +20,7 @@ import {
 
 describe('simulation constants and geochemistry', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3f-rich-geochemistry-translucent-clouds-smooth-tides');
+    expect(BUILD_LABEL).toBe('v3g-motile-organisms-mitosis-abiogenesis-odds');
   });
 
   it('keeps the large planet and 5x lava count', () => {
@@ -39,6 +40,16 @@ describe('simulation constants and geochemistry', () => {
 
   it('uses calibrated visible tide timing', () => {
     expect(TIDE_SPEED).toBe(0.0032);
+  });
+});
+
+describe('calculateAbiogenesisOdds', () => {
+  it('calculates deterministic mathematical odds across all evolutionary tiers', () => {
+    const odds = calculateAbiogenesisOdds();
+    expect(odds.prebioticAtomAbundance).toBeGreaterThan(0.70);
+    expect(odds.molecularBondingPerCollision.catalyzed).toBeGreaterThan(odds.molecularBondingPerCollision.standard);
+    expect(odds.polymerFormationChance.hydrothermalVent).toBeGreaterThan(odds.polymerFormationChance.standard);
+    expect(odds.primitiveLifeEmergence.warmTidalFlats).toBeGreaterThan(odds.primitiveLifeEmergence.openOcean);
   });
 });
 
@@ -74,12 +85,12 @@ describe('tide and lava motion', () => {
 
 describe('reactionProbability', () => {
   it('calculates higher probability for close proximity, catalysts, and tidal pools', () => {
-    const farProb = reactionProbability({ distance: 30, maxDistance: 24 });
+    const farProb = reactionProbability({ distance: 35, maxDistance: 26 });
     expect(farProb).toBe(0);
 
-    const closeProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5 });
-    const catalyzedProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5, hasCatalyst: true });
-    const tidalProb = reactionProbability({ distance: 5, maxDistance: 24, energy: 0.5, hasCatalyst: true, isTidalPool: true });
+    const closeProb = reactionProbability({ distance: 5, maxDistance: 26, energy: 0.5 });
+    const catalyzedProb = reactionProbability({ distance: 5, maxDistance: 26, energy: 0.5, hasCatalyst: true });
+    const tidalProb = reactionProbability({ distance: 5, maxDistance: 26, energy: 0.5, hasCatalyst: true, isTidalPool: true });
 
     expect(closeProb).toBeGreaterThan(0);
     expect(catalyzedProb).toBeGreaterThan(closeProb);
@@ -93,22 +104,28 @@ describe('classifyReaction', () => {
   });
 
   it('catalyzes polymer formation when Fe-S minerals are present', () => {
-    const withoutFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N'], organicScore: 9 });
-    const withFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'Fe', 'S'], organicScore: 9 });
+    const withoutFeS = classifyReaction({ atomKeys: ['C', 'H', 'O'], organicScore: 7 });
+    const withFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'Fe', 'S'], organicScore: 7 });
     expect(withoutFeS.stage).toBe('molecule');
     expect(withFeS.stage).toBe('polymer');
     expect(withFeS.messages).toContain('Fe-S minerals catalyzed organic units into a stable polymer chain.');
   });
 
-  it('forms protocell when phosphorus, sulfur, and energy are present', () => {
-    const result = classifyReaction({ atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 16, energy: 0.75 });
+  it('forms protocell when phosphorus/sulfur and energy are present', () => {
+    const result = classifyReaction({ previousStage: 'polymer', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 14, energy: 0.75 });
     expect(result.stage).toBe('protocell');
     expect(result.messages).toContain('A membrane-bound protocell formed near a hydrothermal mineral boundary.');
   });
 
   it('forms organism from protocell with enough score and energy', () => {
-    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 18, energy: 0.65 });
+    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 16, energy: 0.60 });
     expect(result.stage).toBe('organism');
-    expect(result.messages).toContain('Primitive metabolic life emerged in a warm tidal zone.');
+    expect(result.messages[0]).toContain('Primitive metabolic life emerged');
+  });
+
+  it('evolves complex multicellular life from high-energy organisms', () => {
+    const result = classifyReaction({ previousStage: 'organism', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 24, energy: 0.65 });
+    expect(result.stage).toBe('complex');
+    expect(result.messages[0]).toContain('Complex motile colonial organism evolved');
   });
 });

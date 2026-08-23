@@ -10,6 +10,7 @@ import {
   PLANET_RADIUS,
   TIDE_SPEED,
   VOLCANIC_COMPOUNDS,
+  calculateAbiogenesisOdds,
   clamp,
   classifyReaction,
   reactionProbability,
@@ -22,11 +23,14 @@ const hud = {
   atoms: document.querySelector('#atoms'),
   molecules: document.querySelector('#molecules'),
   polymers: document.querySelector('#polymers'),
-  life: document.querySelector('#life'),
+  protocells: document.querySelector('#protocells'),
+  organisms: document.querySelector('#organisms'),
+  complex: document.querySelector('#complex'),
   era: document.querySelector('#era'),
   build: document.querySelector('#build'),
   events: document.querySelector('#events'),
   legend: document.querySelector('#legend'),
+  oddsMatrix: document.querySelector('#odds-matrix'),
 };
 
 const buildLabel = BUILD_LABEL;
@@ -242,7 +246,7 @@ function makeClouds() {
     const altitude = planetRadius + 360 + Math.random() * 280;
     const cloud = new THREE.Group();
 
-    // Multi-part low-poly cloud cluster for stylized realism
+    // Multi-part low-poly cloud cluster
     const mainPuff = new THREE.Mesh(new THREE.DodecahedronGeometry(18 + Math.random() * 22, 0), materials.cloud);
     mainPuff.scale.set(3.2 + Math.random() * 2.5, 0.6 + Math.random() * 0.35, 1.6 + Math.random() * 1.2);
     cloud.add(mainPuff);
@@ -419,17 +423,23 @@ function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(45
   if (particles.length > 520) return;
   const mesh = makeParticleMesh(kind);
   mesh.position.copy(position);
-  if (options.scale) mesh.scale.setScalar(options.scale);
+  const scale = options.scale || 1.0;
+  mesh.scale.setScalar(scale);
   mesh.castShadow = true;
   particleGroup.add(mesh);
+
   particles.push({
     mesh,
     atoms: [kind.key],
-    organic: kind.organic,
+    organic: kind.organic || 0,
     energy: options.energy ?? Math.random(),
     stage: options.stage || 'atom',
     label: options.label || kind.key,
     velocity: options.velocity || randomSurfacePoint(1).multiplyScalar(0.08),
+    baseScale: scale,
+    phase: Math.random() * Math.PI * 2,
+    swimSeed: Math.random() * 100,
+    consumed: 0,
   });
 }
 
@@ -437,6 +447,22 @@ function seedOrganics() {
   const organics = atoms.filter((atom) => ['C', 'H', 'O', 'N', 'P', 'S'].includes(atom.key));
   for (let i = 0; i < 75; i += 1) spawnParticle(organics[Math.floor(Math.random() * organics.length)], surfacePointWithAltitude(25 + Math.random() * 80));
   addEvent('Organic-rich compounds seeded near the ocean skin.');
+}
+
+function catalyzeLifeHotspots() {
+  for (const vent of volcanoVents.slice(0, 10)) {
+    const compound = VOLCANIC_COMPOUNDS[Math.floor(Math.random() * VOLCANIC_COMPOUNDS.length)];
+    spawnVolcanicMolecule(vent, compound);
+  }
+  for (let i = 0; i < 45; i += 1) {
+    const pAtom = atoms.find((a) => a.key === 'P') || atoms[0];
+    const sAtom = atoms.find((a) => a.key === 'S') || atoms[0];
+    const cAtom = atoms.find((a) => a.key === 'C') || atoms[0];
+    spawnParticle(pAtom, surfacePointWithAltitude(25 + Math.random() * 50));
+    spawnParticle(sAtom, surfacePointWithAltitude(25 + Math.random() * 50));
+    spawnParticle(cAtom, surfacePointWithAltitude(25 + Math.random() * 50));
+  }
+  addEvent('✨ Hydrothermal Life Catalyst triggered: high-energy P-S-C compounds seeded.');
 }
 
 function meteorStorm() {
@@ -478,6 +504,7 @@ function combine(a, b) {
   a.organic = reaction.effectiveScore;
   a.energy = energy;
   a.stage = reaction.stage;
+  a.baseScale = reaction.scale;
   b.dead = true;
 
   for (const msg of reaction.messages) {
@@ -505,7 +532,7 @@ function reactVisibleParticles() {
 
     const prob = reactionProbability({
       distance: dist,
-      maxDistance: 24,
+      maxDistance: 26,
       energy: (a.energy + b.energy) * 0.5,
       hasCatalyst,
       isTidalPool,
@@ -534,6 +561,50 @@ function updateParticles(delta) {
     if (!particle || particle.dead) continue;
     const position = particle.mesh.position;
     const direction = position.clone().normalize();
+
+    // 1. Motility and Autonomous Locomotion for Life Forms
+    if (particle.stage === 'protocell') {
+      // Membrane breathing respiration pulse
+      const pulse = Math.sin(tick * 0.08 + particle.phase) * 0.14;
+      particle.mesh.scale.setScalar(particle.baseScale * (1 + pulse));
+    } else if (particle.stage === 'organism' || particle.stage === 'complex') {
+      // Autonomous Swimming / Crawling across Ocean & Tidal Flats
+      if (!particle.heading) {
+        particle.heading = new THREE.Vector3(1, 0, 0).cross(direction).normalize();
+      }
+      particle.heading.applyAxisAngle(direction, Math.sin(tick * 0.06 + particle.swimSeed) * 0.09);
+      const swimSpeed = (particle.stage === 'complex' ? 140 : 95) * delta;
+      position.addScaledVector(particle.heading, swimSpeed);
+
+      // Undulating cilia / flagella rotation
+      particle.mesh.rotation.z = Math.sin(tick * 0.16 + particle.swimSeed) * 0.45;
+
+      // Active Nutrient Feeding: absorb nearby raw atoms within reach
+      for (const other of particles) {
+        if (other !== particle && !other.dead && other.stage === 'atom' && position.distanceTo(other.mesh.position) < 28) {
+          other.dead = true;
+          particle.organic += 1;
+          particle.consumed += 1;
+          particle.energy = Math.min(1, particle.energy + 0.12);
+          break;
+        }
+      }
+
+      // Mitosis (Cell Division): Organisms with excess energy divide and replicate
+      if (particle.energy > 0.88 && particle.consumed >= 4 && particles.length < 500 && Math.random() < 0.04) {
+        particle.energy *= 0.52;
+        particle.consumed = 0;
+        const daughterPos = position.clone().add(randomSurfacePoint(25));
+        spawnParticle(atoms.find((a) => a.key === 'C') || atoms[0], daughterPos, {
+          stage: 'protocell',
+          scale: 2.7,
+          energy: 0.72,
+        });
+        addEvent('🌱 Cellular mitosis: an organism divided and reproduced in a nutrient-rich tidal pool!');
+      }
+    }
+
+    // 2. Physical forces (Gravity, Terrain Clamping, Wind Drift)
     const surface = direction.clone().multiplyScalar(planetRadius + terrainHeight(direction) + 45);
     const gravity = surface.sub(position).multiplyScalar(0.018);
     particle.velocity.add(gravity);
@@ -606,17 +677,30 @@ function updateNavigation(delta) {
 function updateHud() {
   const counts = particles.reduce(
     (total, particle) => {
-      total[particle.stage] += 1;
+      total[particle.stage] = (total[particle.stage] || 0) + 1;
       return total;
     },
-    { atom: 0, molecule: 0, polymer: 0, protocell: 0, organism: 0 },
+    { atom: 0, molecule: 0, polymer: 0, protocell: 0, organism: 0, complex: 0 },
   );
-  const lifeCount = counts.protocell + counts.organism;
+
   hud.atoms.textContent = counts.atom;
   hud.molecules.textContent = counts.molecule;
   hud.polymers.textContent = counts.polymer;
-  hud.life.textContent = lifeCount;
-  hud.era.textContent = counts.organism ? 'Primitive life' : counts.protocell ? 'Protocells' : counts.polymer ? 'Polymers' : counts.molecule ? 'Chemistry' : 'Atom rain';
+  if (hud.protocells) hud.protocells.textContent = counts.protocell;
+  if (hud.organisms) hud.organisms.textContent = counts.organism;
+  if (hud.complex) hud.complex.textContent = counts.complex;
+
+  hud.era.textContent = counts.complex
+    ? 'Colonial complex life'
+    : counts.organism
+    ? 'Primitive swimming life'
+    : counts.protocell
+    ? 'Protocells'
+    : counts.polymer
+    ? 'Polymers'
+    : counts.molecule
+    ? 'Chemistry'
+    : 'Atom rain';
 }
 
 function frame() {
@@ -665,11 +749,25 @@ hud.legend.innerHTML = atoms
   .join('');
 hud.build.textContent = buildLabel;
 
+// Render calculated abiogenesis probabilities
+const odds = calculateAbiogenesisOdds();
+if (hud.oddsMatrix) {
+  hud.oddsMatrix.innerHTML = `
+    <div class="legend-row"><span class="swatch" style="background:#7ef0c1"></span><span>Prebiotic Elements (CHONPS)</span><strong>${Math.round(odds.prebioticAtomAbundance * 100)}%</strong></div>
+    <div class="legend-row"><span class="swatch" style="background:#8fe1ff"></span><span>Molecular Bonding / Hit</span><strong>${Math.round(odds.molecularBondingPerCollision.catalyzed * 100)}% (cat)</strong></div>
+    <div class="legend-row"><span class="swatch" style="background:#ff7bd3"></span><span>Protocell Vesicle Enclosure</span><strong>${Math.round(odds.protocellEnclosureChance.withPhosphorusSulfur * 100)}%</strong></div>
+    <div class="legend-row"><span class="swatch" style="background:#ffe26e"></span><span>Primitive Life in Tidal Flats</span><strong>${Math.round(odds.primitiveLifeEmergence.warmTidalFlats * 100)}%</strong></div>
+    <div class="legend-row"><span class="swatch" style="background:#00ffd5"></span><span>Mitosis & Replication Rate</span><strong>${Math.round(odds.mitosisDivisionRate * 100)}%</strong></div>
+  `;
+}
+
 document.querySelector('#toggle').addEventListener('click', (event) => {
   running = !running;
   event.currentTarget.textContent = running ? 'Pause' : 'Resume';
 });
 document.querySelector('#seed').addEventListener('click', seedOrganics);
+const catalyzeBtn = document.querySelector('#catalyze');
+if (catalyzeBtn) catalyzeBtn.addEventListener('click', catalyzeLifeHotspots);
 document.querySelector('#storm').addEventListener('click', meteorStorm);
 window.addEventListener('resize', resize);
 canvas.addEventListener('pointerdown', (event) => {

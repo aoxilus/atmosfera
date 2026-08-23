@@ -15,7 +15,7 @@
           <h1>atmosfera</h1>
           <p>
             A tiny world where Earth-like atoms fall from space, drift through wind and water,
-            bond into molecules, polymer chains, protocells, organisms, and complex life.
+            bond into molecules, polymer chains, protocells, organisms, and complex motile life.
           </p>
           <p class="nav-help">
             Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, drag mouse to look, wheel or <kbd>R</kbd><kbd>F</kbd> to zoom.
@@ -24,6 +24,7 @@
         <div class="controls" aria-label="Simulation controls">
           <button id="toggle">Pause</button>
           <button id="seed">Seed organics</button>
+          <button id="catalyze">Catalyze life</button>
           <button id="storm">Meteor storm</button>
         </div>
       </section>
@@ -36,7 +37,9 @@
             <div><dt>Atoms</dt><dd id="atoms">0</dd></div>
             <div><dt>Molecules</dt><dd id="molecules">0</dd></div>
             <div><dt>Polymers</dt><dd id="polymers">0</dd></div>
-            <div><dt>Life</dt><dd id="life">0</dd></div>
+            <div><dt>Protocells</dt><dd id="protocells">0</dd></div>
+            <div><dt>Organisms</dt><dd id="organisms">0</dd></div>
+            <div><dt>Complex Life</dt><dd id="complex">0</dd></div>
             <div><dt>Era</dt><dd id="era">Atom rain</dd></div>
             <div><dt>Build</dt><dd id="build">scale check</dd></div>
           </dl>
@@ -54,12 +57,27 @@
         </article>
       </section>
 
+      <section class="readout-grid">
+        <article class="readout-card">
+          <h2>Abiogenesis Probability Calculator</h2>
+          <div id="odds-matrix" class="distribution-grid"></div>
+        </article>
+        <article class="readout-card">
+          <h2>Life Forms & Motility Matrix</h2>
+          <ul class="motility-list">
+            <li><strong>🫧 Protocells (#ff7bd3)</strong>: Membrane respiration, creeping along warm mineral shores.</li>
+            <li><strong>🌱 Primitive Organisms (#ffe26e)</strong>: Autonomous sinusoidal swimming, active nutrient feeding.</li>
+            <li><strong>🦠 Complex Colonies (#00ffd5)</strong>: High-speed motile swimmers with cellular division (mitosis).</li>
+          </ul>
+        </article>
+      </section>
+
       <section class="idea-card">
         <h2>Rule ladder</h2>
         <p>
-          Atoms collide in water. Correct CHON-rich mixes become organic molecules. Stable chains
-          become polymers. Polymers plus membranes and energy become protocells. Protocells mutate
-          into water, land, and sky life if the environment lets them survive.
+          Atoms collide in water and wind. Correct CHON-rich mixes form molecules. Fe-S clusters catalyze polymers.
+          Polymers plus phosphate membranes and thermal energy form protocells. Protocells ignite metabolic respiration
+          to become motile swimming organisms that feed, grow, and reproduce by mitosis.
         </p>
       </section>
     </main>

@@ -235,6 +235,18 @@ dd {
   padding: 22px 24px;
 }
 
+.motility-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.motility-list li {
+  margin-bottom: 8px;
+}
+
 .idea-card h2 {
   margin-bottom: 8px;
 }

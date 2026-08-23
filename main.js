@@ -6,11 +6,14 @@
 import * as THREE from 'three';
 import {
   BUILD_LABEL,
+  BUOYANCY_MODES,
+  GRAVITY_PRESETS,
   LAVA_COUNT,
   PLANET_RADIUS,
   TIDE_SPEED,
   VOLCANIC_COMPOUNDS,
   calculateAbiogenesisOdds,
+  calculateParticleBuoyancy,
   classifyReaction,
   reactionProbability,
   terrainHeight as getTerrainHeight,
@@ -25,11 +28,15 @@ const hud = {
   protocells: document.querySelector('#protocells'),
   organisms: document.querySelector('#organisms'),
   complex: document.querySelector('#complex'),
+  floatingCount: document.querySelector('#floating-count'),
+  groundCount: document.querySelector('#ground-count'),
   era: document.querySelector('#era'),
   build: document.querySelector('#build'),
   events: document.querySelector('#events'),
   legend: document.querySelector('#legend'),
   oddsMatrix: document.querySelector('#odds-matrix'),
+  gravityBtn: document.querySelector('#gravity-btn'),
+  buoyancyBtn: document.querySelector('#buoyancy-btn'),
 };
 
 const buildLabel = BUILD_LABEL;
@@ -70,6 +77,8 @@ let yaw = 0;
 let pitch = -0.22;
 let distance = 9600;
 let oceanTideScale = 1.0;
+let gravityPresetIndex = 0;
+let buoyancyModeIndex = 0;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#020712');
@@ -325,7 +334,7 @@ function updateLavaPools() {
 }
 
 function emitVolcanicChemistry() {
-  if (tick % 24 !== 0 || volcanoVents.length === 0) return;
+  if (tick % 20 !== 0 || volcanoVents.length === 0) return;
   const vent = volcanoVents[Math.floor(Math.random() * volcanoVents.length)];
   const metallic = atoms.filter((atom) => ['Fe', 'Si', 'S', 'P', 'M', 'Ca', 'Na', 'C'].includes(atom.key));
   const burstCount = 3 + Math.floor(Math.random() * 4);
@@ -333,10 +342,10 @@ function emitVolcanicChemistry() {
   for (let i = 0; i < burstCount; i += 1) {
     const kind = metallic[Math.floor(Math.random() * metallic.length)];
     const originDirection = vent.direction.clone().add(randomSurfacePoint(0.015)).normalize();
-    spawnParticle(kind, surfacePointWithAltitude(60 + Math.random() * 90, originDirection), {
+    spawnParticle(kind, surfacePointWithAltitude(80 + Math.random() * 110, originDirection), {
       scale: 1.35,
       energy: 0.68 + Math.random() * 0.25,
-      velocity: vent.direction.clone().multiplyScalar(0.45 + Math.random() * 0.35).add(randomSurfacePoint(0.12)),
+      velocity: vent.direction.clone().multiplyScalar(0.75 + Math.random() * 0.45).add(randomSurfacePoint(0.20)),
     });
   }
 
@@ -352,12 +361,12 @@ function emitVolcanicChemistry() {
 }
 
 function spawnVolcanicMolecule(vent, compound = VOLCANIC_COMPOUNDS[0]) {
-  spawnParticle(compound, surfacePointWithAltitude(70 + Math.random() * 80, vent.direction.clone()), {
+  spawnParticle(compound, surfacePointWithAltitude(90 + Math.random() * 90, vent.direction.clone()), {
     stage: 'molecule',
     label: compound.key,
     scale: 1.85,
     energy: compound.energy,
-    velocity: vent.direction.clone().multiplyScalar(0.48 + Math.random() * 0.26).add(randomSurfacePoint(0.12)),
+    velocity: vent.direction.clone().multiplyScalar(0.85 + Math.random() * 0.35).add(randomSurfacePoint(0.20)),
   });
 }
 
@@ -379,7 +388,7 @@ function makeParticleMesh(kind) {
   return new THREE.Mesh(geometry, material);
 }
 
-function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(70 + Math.random() * 110), options = {}) {
+function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(120 + Math.random() * 180), options = {}) {
   if (particles.length > 520) return;
   const mesh = makeParticleMesh(kind);
   mesh.position.copy(position);
@@ -396,7 +405,7 @@ function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(70
     energy: options.energy ?? Math.random(),
     stage: options.stage || 'atom',
     label: options.label || kind.key,
-    velocity: options.velocity || randomSurfacePoint(1).multiplyScalar(0.15),
+    velocity: options.velocity || randomSurfacePoint(1).multiplyScalar(0.25),
     baseScale: scale,
     phase: Math.random() * Math.PI * 2,
     swimSeed: Math.random() * 100,
@@ -407,9 +416,9 @@ function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(70
 function seedOrganics() {
   const organics = atoms.filter((atom) => ['C', 'H', 'O', 'N', 'P', 'S'].includes(atom.key));
   for (let i = 0; i < 75; i += 1) {
-    spawnParticle(organics[Math.floor(Math.random() * organics.length)], surfacePointWithAltitude(20 + Math.random() * 60));
+    spawnParticle(organics[Math.floor(Math.random() * organics.length)], surfacePointWithAltitude(100 + Math.random() * 120));
   }
-  addEvent('Organic-rich compounds seeded near the ocean skin.');
+  addEvent('Organic-rich compounds seeded under planetary gravity.');
 }
 
 function catalyzeLifeHotspots() {
@@ -421,9 +430,9 @@ function catalyzeLifeHotspots() {
     const pAtom = atoms.find((a) => a.key === 'P') || atoms[0];
     const sAtom = atoms.find((a) => a.key === 'S') || atoms[0];
     const cAtom = atoms.find((a) => a.key === 'C') || atoms[0];
-    spawnParticle(pAtom, surfacePointWithAltitude(20 + Math.random() * 40));
-    spawnParticle(sAtom, surfacePointWithAltitude(20 + Math.random() * 40));
-    spawnParticle(cAtom, surfacePointWithAltitude(20 + Math.random() * 40));
+    spawnParticle(pAtom, surfacePointWithAltitude(50 + Math.random() * 60));
+    spawnParticle(sAtom, surfacePointWithAltitude(50 + Math.random() * 60));
+    spawnParticle(cAtom, surfacePointWithAltitude(50 + Math.random() * 60));
   }
   addEvent('✨ Hydrothermal Life Catalyst triggered: high-energy P-S-C compounds seeded.');
 }
@@ -434,12 +443,12 @@ function meteorStorm() {
     const start = target.clone().normalize().multiplyScalar(planetRadius + 18000 + Math.random() * 9000);
     const meteor = new THREE.Mesh(new THREE.IcosahedronGeometry(12 + Math.random() * 10, 0), materials.meteor);
     meteor.position.copy(start);
-    meteor.userData.velocity = target.sub(start).normalize().multiplyScalar(140 + Math.random() * 100);
+    meteor.userData.velocity = target.sub(start).normalize().multiplyScalar(160 + Math.random() * 100);
     meteor.userData.life = 260;
     meteorGroup.add(meteor);
   }
-  for (let i = 0; i < 80; i += 1) spawnParticle(undefined, surfacePointWithAltitude(120 + Math.random() * 150));
-  addEvent('Meteor storm added fresh Earth-like atoms.');
+  for (let i = 0; i < 80; i += 1) spawnParticle(undefined, surfacePointWithAltitude(180 + Math.random() * 240));
+  addEvent('Meteor storm: cosmic particles entering planetary gravity field.');
 }
 
 function combine(a, b) {
@@ -515,11 +524,12 @@ function reactVisibleParticles() {
 }
 
 function updateParticles(delta) {
-  if (tick % 5 === 0) {
-    spawnParticle(undefined, surfacePointWithAltitude(80 + Math.random() * 120, focus.clone().normalize().add(randomSurfacePoint(0.15)).normalize()));
+  if (tick % 4 === 0) {
+    spawnParticle(undefined, surfacePointWithAltitude(140 + Math.random() * 180, focus.clone().normalize().add(randomSurfacePoint(0.18)).normalize()));
   }
 
   const currentOceanRadius = planetRadius + 140 * oceanTideScale;
+  const gravityConfig = GRAVITY_PRESETS[gravityPresetIndex] || GRAVITY_PRESETS[0];
 
   for (let i = 0; i < particles.length; i += 1) {
     const particle = particles[i];
@@ -529,26 +539,22 @@ function updateParticles(delta) {
     const direction = position.clone().normalize();
     const currentRadius = position.length();
     const groundRadius = planetRadius + terrainHeight(direction);
-    const isOverOcean = groundRadius < currentOceanRadius;
 
     // 1. Motility and Autonomous Locomotion for Organisms
     if (particle.stage === 'protocell') {
-      // Membrane breathing respiration pulse
       const pulse = Math.sin(tick * 0.08 + particle.phase) * 0.14;
       particle.mesh.scale.setScalar(particle.baseScale * (1 + pulse));
     } else if (particle.stage === 'organism' || particle.stage === 'complex') {
-      // Autonomous Swimming Locomotion
       if (!particle.heading) {
         particle.heading = new THREE.Vector3(1, 0, 0).cross(direction).normalize();
       }
       particle.heading.applyAxisAngle(direction, Math.sin(tick * 0.06 + particle.swimSeed) * 0.09);
-      const swimSpeed = (particle.stage === 'complex' ? 140 : 95) * delta;
+      const swimSpeed = (particle.stage === 'complex' ? 160 : 110) * delta;
       position.addScaledVector(particle.heading, swimSpeed);
 
-      // Undulating cilia / flagella rotation
       particle.mesh.rotation.z = Math.sin(tick * 0.16 + particle.swimSeed) * 0.45;
 
-      // Active Feeding: absorb nearby atoms
+      // Active Nutrient Feeding
       for (const other of particles) {
         if (other !== particle && !other.dead && other.stage === 'atom' && position.distanceTo(other.mesh.position) < 32) {
           other.dead = true;
@@ -573,43 +579,45 @@ function updateParticles(delta) {
       }
     }
 
-    // 2. Physical Gravity, Buoyancy and Surface Contact
-    const waterLevel = isOverOcean ? currentOceanRadius : groundRadius;
+    // 2. Deterministic Planetary Gravity and Hydrodynamic Buoyancy
+    const buoyancy = calculateParticleBuoyancy({
+      isMineral: particle.isMineral,
+      currentRadius,
+      oceanRadius: currentOceanRadius,
+      groundRadius,
+      phase: particle.phase,
+      tick,
+      buoyancyModeIndex,
+    });
 
-    if (currentRadius > waterLevel + 4) {
-      // IN THE AIR: Real Inward Planetary Gravity
-      particle.velocity.addScaledVector(direction, -180 * delta);
-      particle.velocity.multiplyScalar(0.96); // Air drag
-      position.addScaledVector(particle.velocity, delta * 60);
+    particle.physicsState = buoyancy.state;
+
+    if (currentRadius > buoyancy.targetRadius + 6) {
+      // IN AIR: Fast, visible gravitational acceleration straight toward the planet
+      const gravityStep = gravityConfig.gAcc * delta;
+      particle.velocity.addScaledVector(direction, -gravityStep);
+      particle.velocity.multiplyScalar(0.96); // atmospheric drag
+      position.addScaledVector(particle.velocity, delta * 75);
     } else {
-      // AT WATER OR GROUND SURFACE:
-      if (isOverOcean) {
-        // In ocean water:
-        if (particle.isMineral) {
-          // Heavy minerals (Fe, Si, M) sink to the seabed floor
-          const seabedRadius = groundRadius + 2.5;
-          if (currentRadius > seabedRadius) {
-            position.addScaledVector(direction, -35 * delta);
-          } else {
-            position.normalize().multiplyScalar(seabedRadius);
-            particle.velocity.set(0, 0, 0);
-          }
-        } else {
-          // Organics, molecules, polymers, and organisms have POSITIVE BUOYANCY (float on water)
-          const targetSurface = currentOceanRadius + 2 + Math.sin(tick * 0.08 + particle.phase) * 1.5;
-          const buoyancyAdjustment = (targetSurface - currentRadius) * 0.14;
-          position.addScaledVector(direction, buoyancyAdjustment);
-          particle.velocity.multiplyScalar(0.82); // Water drag
+      // AT SEA SURFACE, SEABED, OR DRY LAND:
+      if (buoyancy.state === 'floating') {
+        // POSITIVE BUOYANCY: Ride ocean waves with harmonic surface tension
+        const floatDiff = buoyancy.targetRadius - currentRadius;
+        position.addScaledVector(direction, floatDiff * 0.22);
+        particle.velocity.multiplyScalar(0.80);
 
-          // Tidal and ocean wave current drift
-          const upAxis = new THREE.Vector3(0, 1, 0);
-          const currentTangent = new THREE.Vector3().crossVectors(upAxis, direction).normalize();
-          position.addScaledVector(currentTangent, Math.sin(tick * 0.015 + particle.phase) * 18 * delta);
-        }
+        // Ocean tidal drift
+        const upAxis = new THREE.Vector3(0, 1, 0);
+        const oceanDrift = new THREE.Vector3().crossVectors(upAxis, direction).normalize();
+        position.addScaledVector(oceanDrift, Math.sin(tick * 0.018 + particle.phase) * 22 * delta);
+      } else if (buoyancy.state === 'sinking') {
+        // NEGATIVE BUOYANCY: Sinks down to the seafloor
+        position.addScaledVector(direction, -buoyancy.sinkSpeed * delta);
+        particle.velocity.multiplyScalar(0.75);
       } else {
-        // On dry land: Solid ground collision and terrain resting
-        position.normalize().multiplyScalar(groundRadius + 2.5);
-        particle.velocity.multiplyScalar(0.70); // Ground friction
+        // GROUND OR SEABED CONTACT
+        position.normalize().multiplyScalar(buoyancy.targetRadius);
+        particle.velocity.multiplyScalar(0.60);
       }
     }
 
@@ -630,7 +638,7 @@ function updateMeteors() {
     meteor.rotation.y += 0.08;
     meteor.userData.life -= 1;
     if (meteor.position.length() < planetRadius + 6 || meteor.userData.life <= 0) {
-      for (let j = 0; j < 8; j += 1) spawnParticle(undefined, surfacePointWithAltitude(40 + Math.random() * 80));
+      for (let j = 0; j < 8; j += 1) spawnParticle(undefined, surfacePointWithAltitude(60 + Math.random() * 90));
       addEvent('Meteor impact scattered new reactive atoms.');
       meteorGroup.remove(meteor);
       meteor.geometry.dispose();
@@ -667,9 +675,11 @@ function updateHud() {
   const counts = particles.reduce(
     (total, particle) => {
       total[particle.stage] = (total[particle.stage] || 0) + 1;
+      if (particle.physicsState === 'floating') total.floating += 1;
+      else total.ground += 1;
       return total;
     },
-    { atom: 0, molecule: 0, polymer: 0, protocell: 0, organism: 0, complex: 0 },
+    { atom: 0, molecule: 0, polymer: 0, protocell: 0, organism: 0, complex: 0, floating: 0, ground: 0 },
   );
 
   hud.atoms.textContent = counts.atom;
@@ -678,6 +688,8 @@ function updateHud() {
   if (hud.protocells) hud.protocells.textContent = counts.protocell;
   if (hud.organisms) hud.organisms.textContent = counts.organism;
   if (hud.complex) hud.complex.textContent = counts.complex;
+  if (hud.floatingCount) hud.floatingCount.textContent = counts.floating;
+  if (hud.groundCount) hud.groundCount.textContent = counts.ground;
 
   hud.era.textContent = counts.complex
     ? 'Colonial complex life'
@@ -701,7 +713,7 @@ function frame() {
     moon.rotation.y += delta * 0.08;
     moon.rotation.x += delta * 0.025;
 
-    // Dynamic smooth ocean tide without Z-fighting or vibration
+    // Dynamic smooth ocean tide
     const ocean = planet.getObjectByName('ocean');
     if (ocean) {
       const tideFactor = Math.sin(tick * tideSpeed);
@@ -751,10 +763,30 @@ if (hud.oddsMatrix) {
   `;
 }
 
+// Controls
 document.querySelector('#toggle').addEventListener('click', (event) => {
   running = !running;
   event.currentTarget.textContent = running ? 'Pause' : 'Resume';
 });
+
+if (hud.gravityBtn) {
+  hud.gravityBtn.addEventListener('click', () => {
+    gravityPresetIndex = (gravityPresetIndex + 1) % GRAVITY_PRESETS.length;
+    const preset = GRAVITY_PRESETS[gravityPresetIndex];
+    hud.gravityBtn.textContent = `Gravity: ${preset.label}`;
+    addEvent(`⚙️ Planetary gravity adjusted to: ${preset.label}`);
+  });
+}
+
+if (hud.buoyancyBtn) {
+  hud.buoyancyBtn.addEventListener('click', () => {
+    buoyancyModeIndex = (buoyancyModeIndex + 1) % BUOYANCY_MODES.length;
+    const mode = BUOYANCY_MODES[buoyancyModeIndex];
+    hud.buoyancyBtn.textContent = `Buoyancy: ${mode.label.split(' ')[0]}`;
+    addEvent(`⚙️ Ocean buoyancy mode switched to: ${mode.label}`);
+  });
+}
+
 document.querySelector('#seed').addEventListener('click', seedOrganics);
 const catalyzeBtn = document.querySelector('#catalyze');
 if (catalyzeBtn) catalyzeBtn.addEventListener('click', catalyzeLifeHotspots);

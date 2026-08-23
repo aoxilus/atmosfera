@@ -14,7 +14,7 @@
           <p class="eyebrow">AOXILUS primordial sim</p>
           <h1>atmosfera</h1>
           <p>
-            A tiny world where Earth-like atoms fall from space, drift through wind and water,
+            A tiny world where Earth-like atoms fall under planetary gravity, float and bob in ocean tides,
             bond into molecules, polymer chains, protocells, organisms, and complex motile life.
           </p>
           <p class="nav-help">
@@ -23,6 +23,8 @@
         </div>
         <div class="controls" aria-label="Simulation controls">
           <button id="toggle">Pause</button>
+          <button id="gravity-btn">Gravity: 1.0x</button>
+          <button id="buoyancy-btn">Buoyancy: Active</button>
           <button id="seed">Seed organics</button>
           <button id="catalyze">Catalyze life</button>
           <button id="storm">Meteor storm</button>
@@ -40,6 +42,8 @@
             <div><dt>Protocells</dt><dd id="protocells">0</dd></div>
             <div><dt>Organisms</dt><dd id="organisms">0</dd></div>
             <div><dt>Complex Life</dt><dd id="complex">0</dd></div>
+            <div><dt>Floating Water</dt><dd id="floating-count">0</dd></div>
+            <div><dt>Seabed / Land</dt><dd id="ground-count">0</dd></div>
             <div><dt>Era</dt><dd id="era">Atom rain</dd></div>
             <div><dt>Build</dt><dd id="build">scale check</dd></div>
           </dl>
@@ -63,11 +67,12 @@
           <div id="odds-matrix" class="distribution-grid"></div>
         </article>
         <article class="readout-card">
-          <h2>Life Forms & Motility Matrix</h2>
+          <h2>Physics & Buoyancy Engine</h2>
           <ul class="motility-list">
-            <li><strong>🫧 Protocells (#ff7bd3)</strong>: Membrane respiration, creeping along warm mineral shores.</li>
-            <li><strong>🌱 Primitive Organisms (#ffe26e)</strong>: Autonomous sinusoidal swimming, active nutrient feeding.</li>
-            <li><strong>🦠 Complex Colonies (#00ffd5)</strong>: High-speed motile swimmers with cellular division (mitosis).</li>
+            <li><strong>🌌 Real Planetary Gravity</strong>: Continuous central acceleration ($g \approx 540 \text{ u/s}^2$).</li>
+            <li><strong>🌊 Positive Ocean Buoyancy</strong>: Organics & life float on wave peaks ($h = +3.2 \text{ u}$).</li>
+            <li><strong>⚓ Negative Mineral Sinking</strong>: Heavy metals ($Fe, Si, M$) sink to hydrothermal seabed.</li>
+            <li><strong>🏊 Autonomous Motility</strong>: Organisms swim across water surfaces with feeding & mitosis.</li>
           </ul>
         </article>
       </section>
@@ -75,9 +80,9 @@
       <section class="idea-card">
         <h2>Rule ladder</h2>
         <p>
-          Atoms collide in water and wind. Correct CHON-rich mixes form molecules. Fe-S clusters catalyze polymers.
-          Polymers plus phosphate membranes and thermal energy form protocells. Protocells ignite metabolic respiration
-          to become motile swimming organisms that feed, grow, and reproduce by mitosis.
+          Atoms fall under gravity. In oceans, organics float and minerals sink. Correct CHON-rich mixes form molecules.
+          Fe-S clusters catalyze polymers. Polymers with membranes and thermal energy form protocells. Protocells
+          ignite metabolic respiration to become motile swimming organisms that feed, grow, and reproduce by mitosis.
         </p>
       </section>
     </main>

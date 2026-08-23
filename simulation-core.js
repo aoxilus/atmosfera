@@ -6,7 +6,7 @@
 export const PLANET_RADIUS = 13200;
 export const TIDE_SPEED = 0.0032;
 export const LAVA_COUNT = 45;
-export const BUILD_LABEL = 'v3h-true-gravity-ocean-buoyancy-motility';
+export const BUILD_LABEL = 'v3i-interactive-gravity-buoyancy-controls';
 
 export const VOLCANIC_COMPOUNDS = [
   { key: 'Fe-S', name: 'Iron-Sulfur catalyst cluster', color: '#ff9a4d', organic: 3, energy: 0.85 },
@@ -16,6 +16,18 @@ export const VOLCANIC_COMPOUNDS = [
   { key: 'CO2', name: 'Volcanic carbon dioxide', color: '#80cbc4', organic: 2, energy: 0.65 },
   { key: 'NH3', name: 'Primordial ammonia vapor', color: '#b39ddb', organic: 3, energy: 0.76 },
   { key: 'PolyP', name: 'Polyphosphate mineral chain', color: '#ff80ab', organic: 4, energy: 0.92 },
+];
+
+export const GRAVITY_PRESETS = [
+  { label: 'Earth (1.0x)', multiplier: 1.0, gAcc: 540 },
+  { label: 'Super-Earth (2.2x)', multiplier: 2.2, gAcc: 1180 },
+  { label: 'Low-G / Moon (0.35x)', multiplier: 0.35, gAcc: 190 },
+];
+
+export const BUOYANCY_MODES = [
+  { label: 'Active (Bobbing & Sinking)', mineralSinkRate: 55, organicFloatHeight: 3.2 },
+  { label: 'Hyper-Buoyant (Surface Film)', mineralSinkRate: 20, organicFloatHeight: 5.5 },
+  { label: 'Dense Fluid (Slow Sinking)', mineralSinkRate: 85, organicFloatHeight: 1.8 },
 ];
 
 export function clamp(value, min, max) {
@@ -37,6 +49,36 @@ export function tideScale(tick, tideSpeed = TIDE_SPEED) {
 
 export function lavaPulse(tick, phase = 0, tideSpeed = TIDE_SPEED) {
   return (Math.sin(tick * tideSpeed + phase) + 1) * 0.5;
+}
+
+export function calculateParticleBuoyancy({
+  isMineral = false,
+  currentRadius = PLANET_RADIUS,
+  oceanRadius = PLANET_RADIUS + 140,
+  groundRadius = PLANET_RADIUS,
+  phase = 0,
+  tick = 0,
+  buoyancyModeIndex = 0,
+}) {
+  const mode = BUOYANCY_MODES[buoyancyModeIndex] || BUOYANCY_MODES[0];
+  const isOverOcean = groundRadius < oceanRadius;
+
+  if (!isOverOcean) {
+    // Dry land resting height
+    return { state: 'ground', targetRadius: groundRadius + 2.5, floating: false };
+  }
+
+  if (isMineral) {
+    // Mineral sinking to seabed
+    const seabed = groundRadius + 2.2;
+    const isSunk = currentRadius <= seabed + 1;
+    return { state: isSunk ? 'seabed' : 'sinking', targetRadius: seabed, sinkSpeed: mode.mineralSinkRate, floating: false };
+  }
+
+  // Organic positive buoyancy floating on water
+  const waveBob = Math.sin(tick * 0.10 + phase) * (mode.organicFloatHeight * 0.6);
+  const targetSurface = oceanRadius + mode.organicFloatHeight + waveBob;
+  return { state: 'floating', targetRadius: targetSurface, floating: true };
 }
 
 export function reactionProbability({ distance = 20, maxDistance = 26, energy = 0.5, hasCatalyst = false, isTidalPool = false }) {

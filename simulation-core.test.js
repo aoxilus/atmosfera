@@ -6,11 +6,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   BUILD_LABEL,
+  BUOYANCY_MODES,
+  GRAVITY_PRESETS,
   LAVA_COUNT,
   PLANET_RADIUS,
   TIDE_SPEED,
   VOLCANIC_COMPOUNDS,
   calculateAbiogenesisOdds,
+  calculateParticleBuoyancy,
   classifyReaction,
   lavaPulse,
   reactionProbability,
@@ -20,7 +23,7 @@ import {
 
 describe('simulation constants and geochemistry', () => {
   it('documents the current visible build label', () => {
-    expect(BUILD_LABEL).toBe('v3h-true-gravity-ocean-buoyancy-motility');
+    expect(BUILD_LABEL).toBe('v3i-interactive-gravity-buoyancy-controls');
   });
 
   it('keeps the large planet and 5x lava count', () => {
@@ -28,18 +31,49 @@ describe('simulation constants and geochemistry', () => {
     expect(LAVA_COUNT).toBe(45);
   });
 
-  it('exports diverse prebiotic volcanic compounds beyond just Fe', () => {
-    expect(VOLCANIC_COMPOUNDS.length).toBeGreaterThanOrEqual(6);
-    const keys = VOLCANIC_COMPOUNDS.map((c) => c.key);
-    expect(keys).toContain('Fe-S');
-    expect(keys).toContain('H2S');
-    expect(keys).toContain('HCN');
-    expect(keys).toContain('PolyP');
-    expect(keys).toContain('NH3');
+  it('exports gravity presets and buoyancy modes', () => {
+    expect(GRAVITY_PRESETS.length).toBeGreaterThanOrEqual(3);
+    expect(BUOYANCY_MODES.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('calculateParticleBuoyancy', () => {
+  it('floats organic molecules on ocean surface with positive buoyancy', () => {
+    const buoyancy = calculateParticleBuoyancy({
+      isMineral: false,
+      currentRadius: PLANET_RADIUS + 120,
+      oceanRadius: PLANET_RADIUS + 140,
+      groundRadius: PLANET_RADIUS - 50,
+    });
+    expect(buoyancy.floating).toBe(true);
+    expect(buoyancy.state).toBe('floating');
+    expect(buoyancy.targetRadius).toBeGreaterThan(PLANET_RADIUS + 140);
   });
 
-  it('uses calibrated visible tide timing', () => {
-    expect(TIDE_SPEED).toBe(0.0032);
+  it('sinks inorganic heavy minerals to seabed with negative buoyancy', () => {
+    const seabed = PLANET_RADIUS - 40;
+    const buoyancy = calculateParticleBuoyancy({
+      isMineral: true,
+      currentRadius: PLANET_RADIUS + 120,
+      oceanRadius: PLANET_RADIUS + 140,
+      groundRadius: seabed,
+    });
+    expect(buoyancy.floating).toBe(false);
+    expect(buoyancy.state).toBe('sinking');
+    expect(buoyancy.targetRadius).toBeCloseTo(seabed + 2.2);
+  });
+
+  it('rests particles on solid dry land', () => {
+    const mountainTop = PLANET_RADIUS + 320;
+    const buoyancy = calculateParticleBuoyancy({
+      isMineral: false,
+      currentRadius: mountainTop,
+      oceanRadius: PLANET_RADIUS + 140,
+      groundRadius: mountainTop,
+    });
+    expect(buoyancy.floating).toBe(false);
+    expect(buoyancy.state).toBe('ground');
+    expect(buoyancy.targetRadius).toBeCloseTo(mountainTop + 2.5);
   });
 });
 

@@ -60,7 +60,8 @@ const totalWeight = atoms.reduce((sum, atom) => sum + atom.weight, 0);
 const planetRadius = PLANET_RADIUS;
 const visibleRadius = 1800;
 const tideSpeed = TIDE_SPEED;
-const reactionCheckBudget = 160;
+const reactionCheckBudget = 240;
+const MAX_PARTICLES = 680;
 const particles = [];
 const events = [];
 const lavaPools = [];
@@ -389,7 +390,15 @@ function makeParticleMesh(kind) {
 }
 
 function spawnParticle(kind = pickAtom(), position = surfacePointWithAltitude(120 + Math.random() * 180), options = {}) {
-  if (particles.length > 520) return;
+  // Protect advanced-stage particles: only evict atoms when over cap
+  if (particles.length >= MAX_PARTICLES) {
+    const evictIdx = particles.findIndex((p) => p.stage === 'atom' && !p.dead);
+    if (evictIdx === -1) return; // no atoms to evict — pool truly full
+    particleGroup.remove(particles[evictIdx].mesh);
+    particles[evictIdx].mesh.geometry.dispose();
+    particles[evictIdx].mesh.material.dispose();
+    particles.splice(evictIdx, 1);
+  }
   const mesh = makeParticleMesh(kind);
   mesh.position.copy(position);
   const scale = options.scale || 1.0;
@@ -457,7 +466,7 @@ function combine(a, b) {
   const rawOrganicScore = a.organic + b.organic;
   const energy = Math.min(1, (a.energy + b.energy) / 2 + Math.random() * 0.22);
   const altitude = a.mesh.position.length() - planetRadius;
-  const isTidalPool = altitude >= 0 && altitude <= 140;
+  const isTidalPool = altitude >= 0 && altitude <= 180;
 
   // Run deterministic reaction classification from simulation-core
   const reaction = classifyReaction({
@@ -478,7 +487,24 @@ function combine(a, b) {
   a.stage = reaction.stage;
   a.baseScale = reaction.scale;
   a.isMineral = false;
-  b.dead = true;
+
+  // KEY FIX: B particle survives as a free atom (not deleted) unless pool is full.
+  // This keeps chemical mass in the system so molecules keep accumulating.
+  if (particles.length < MAX_PARTICLES - 10) {
+    b.stage = 'atom';
+    b.organic = 0;
+    b.energy = Math.random() * 0.45;
+    b.atoms = [b.atoms[0] || 'O'];
+    b.isMineral = b.atoms[0] === 'Fe' || b.atoms[0] === 'Si' || b.atoms[0] === 'Ca';
+    const bAtomDef = atoms.find((atom) => atom.key === b.atoms[0]) || atoms[0];
+    b.mesh.material.color.set(bAtomDef.color);
+    b.mesh.material.emissive.set(bAtomDef.color);
+    b.mesh.scale.setScalar(1.0);
+    b.baseScale = 1.0;
+    b.dead = false;
+  } else {
+    b.dead = true;
+  }
 
   for (const msg of reaction.messages) {
     addEvent(msg);
@@ -523,8 +549,18 @@ function reactVisibleParticles() {
   }
 }
 
+// Tidal pool hotspot concentrators — draw particles inward toward 6 fixed ocean basins
+const TIDAL_HOTSPOTS = [
+  new THREE.Vector3(1, 0.3, 0).normalize(),
+  new THREE.Vector3(-0.7, -0.4, 0.6).normalize(),
+  new THREE.Vector3(0.2, 0.8, -0.5).normalize(),
+  new THREE.Vector3(-0.5, 0.1, -0.9).normalize(),
+  new THREE.Vector3(0.8, -0.6, 0.2).normalize(),
+  new THREE.Vector3(-0.1, -0.9, -0.4).normalize(),
+];
+
 function updateParticles(delta) {
-  if (tick % 4 === 0) {
+  if (tick % 3 === 0) {
     spawnParticle(undefined, surfacePointWithAltitude(140 + Math.random() * 180, focus.clone().normalize().add(randomSurfacePoint(0.18)).normalize()));
   }
 
@@ -565,17 +601,40 @@ function updateParticles(delta) {
         }
       }
 
-      // Mitosis (Cellular Replication)
-      if (particle.energy > 0.88 && particle.consumed >= 3 && particles.length < 500 && Math.random() < 0.05) {
-        particle.energy *= 0.52;
+      // Mitosis (Cellular Replication) — easier thresholds so reproduction actually happens
+      if (particle.energy > 0.78 && particle.consumed >= 1 && particles.length < MAX_PARTICLES - 20 && Math.random() < 0.12) {
+        particle.energy *= 0.55;
         particle.consumed = 0;
-        const daughterPos = position.clone().add(randomSurfacePoint(25));
+        const daughterPos = position.clone().add(randomSurfacePoint(30));
+        const daughterStage = particle.stage === 'complex' ? 'organism' : 'protocell';
         spawnParticle(atoms.find((a) => a.key === 'C') || atoms[0], daughterPos, {
-          stage: 'protocell',
-          scale: 2.7,
-          energy: 0.72,
+          stage: daughterStage,
+          scale: daughterStage === 'organism' ? 3.6 : 2.7,
+          energy: 0.68,
         });
         addEvent('🌱 Cellular mitosis: an organism divided and reproduced in a nutrient-rich tidal pool!');
+      }
+    }
+
+    // 1b. Tidal Pool Concentration: molecules/polymers in ocean zone are gently drawn
+    //     toward the nearest hotspot, creating local chemical concentration pockets.
+    if ((particle.stage === 'molecule' || particle.stage === 'polymer') && !particle.isMineral) {
+      const currentOceanR = planetRadius + 140 * oceanTideScale;
+      if (currentRadius <= currentOceanR + 200) {
+        // Find nearest tidal hotspot
+        let bestHotspot = TIDAL_HOTSPOTS[0];
+        let bestDot = -Infinity;
+        for (const hs of TIDAL_HOTSPOTS) {
+          const dot = direction.dot(hs);
+          if (dot > bestDot) { bestDot = dot; bestHotspot = hs; }
+        }
+        const hotspotSurface = bestHotspot.clone().multiplyScalar(planetRadius + 145);
+        const toHotspot = hotspotSurface.sub(position);
+        const dist = toHotspot.length();
+        // Only attract if within 3000 units of hotspot
+        if (dist < 3000 && dist > 20) {
+          position.addScaledVector(toHotspot.normalize(), Math.min(dist * 0.018, 32) * delta * 60);
+        }
       }
     }
 

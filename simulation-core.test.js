@@ -138,8 +138,10 @@ describe('classifyReaction', () => {
   });
 
   it('catalyzes polymer formation when Fe-S minerals are present', () => {
-    const withoutFeS = classifyReaction({ atomKeys: ['C', 'H', 'O'], organicScore: 7 });
-    const withFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'Fe', 'S'], organicScore: 7 });
+    // Without Fe-S, score=3 stays as molecule (< threshold of 6)
+    const withoutFeS = classifyReaction({ atomKeys: ['C', 'H', 'O'], organicScore: 3 });
+    // With Fe-S, score=3+4=7 >= threshold of 6, becomes polymer
+    const withFeS = classifyReaction({ atomKeys: ['C', 'H', 'O', 'Fe', 'S'], organicScore: 3 });
     expect(withoutFeS.stage).toBe('molecule');
     expect(withFeS.stage).toBe('polymer');
     expect(withFeS.messages).toContain('Fe-S minerals catalyzed organic units into a stable polymer chain.');
@@ -152,13 +154,15 @@ describe('classifyReaction', () => {
   });
 
   it('forms organism from protocell with enough score and energy', () => {
-    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 16, energy: 0.60 });
+    // score 11 >= threshold of 10, energy 0.50 > 0.35
+    const result = classifyReaction({ previousStage: 'protocell', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 11, energy: 0.50 });
     expect(result.stage).toBe('organism');
     expect(result.messages[0]).toContain('Primitive metabolic life emerged');
   });
 
   it('evolves complex multicellular life from high-energy organisms', () => {
-    const result = classifyReaction({ previousStage: 'organism', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 24, energy: 0.65 });
+    // score 17 >= threshold of 16, energy 0.55 > 0.40
+    const result = classifyReaction({ previousStage: 'organism', atomKeys: ['C', 'H', 'O', 'N', 'P', 'S'], organicScore: 17, energy: 0.55 });
     expect(result.stage).toBe('complex');
     expect(result.messages[0]).toContain('Complex motile colonial organism evolved');
   });

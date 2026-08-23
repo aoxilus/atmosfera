@@ -123,7 +123,7 @@ export function classifyReaction({
   if (isTidalPool) effectiveScore += 3;
 
   // 1. Polymer formation (from atom/molecule)
-  if (['atom', 'molecule'].includes(previousStage) && effectiveScore >= 10 && atomKeys.length >= 3) {
+  if (['atom', 'molecule'].includes(previousStage) && effectiveScore >= 6 && atomKeys.length >= 2) {
     stage = 'polymer';
     color = '#7ef0c1';
     scale = 1.9;
@@ -134,7 +134,7 @@ export function classifyReaction({
   }
 
   // 2. Protocell formation (from polymer when P/S and energy are present)
-  if (previousStage === 'polymer' && (atomSet.has('P') || atomSet.has('S') || hasPhosphate) && energy > 0.48) {
+  if (previousStage === 'polymer' && (atomSet.has('P') || atomSet.has('S') || hasPhosphate) && energy > 0.38) {
     stage = 'protocell';
     color = '#ff7bd3';
     scale = 2.85;
@@ -142,7 +142,7 @@ export function classifyReaction({
   }
 
   // 3. Primitive Organism emergence (from protocell)
-  if (previousStage === 'protocell' && effectiveScore >= 15 && energy > 0.45) {
+  if (previousStage === 'protocell' && effectiveScore >= 10 && energy > 0.35) {
     stage = 'organism';
     color = '#ffe26e';
     scale = 3.6;
@@ -150,7 +150,7 @@ export function classifyReaction({
   }
 
   // 4. Complex Multicellular Organism / Colonial Motility (from organism)
-  if (previousStage === 'organism' && effectiveScore >= 22 && energy > 0.52) {
+  if (previousStage === 'organism' && effectiveScore >= 16 && energy > 0.40) {
     stage = 'complex';
     color = '#00ffd5';
     scale = 4.4;

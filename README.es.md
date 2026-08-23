@@ -2,9 +2,9 @@
 
 🌐 **[Read in English](README.md)**
 
-**Simulación interactiva 3D low-poly de abiogénesis planetaria, química prebiótica y vida emergente.**
+**Simulación interactiva 3D low-poly de abiogénesis planetaria, química prebiótica y vida motil emergente.**
 
-`atmosfera` es una simulación en tiempo real para el navegador creada por [aoxilus](https://github.com/aoxilus). Modela un planeta primordial donde elementos cósmicos caen desde el espacio, se desplazan por océanos y atmósferas volcánicas, se enlazan formando moléculas prebióticas, se ensamblan en cadenas de polímeros y sintetizan las primeras protocélulas con membrana y organismos primitivos.
+`atmosfera` es una simulación en tiempo real para el navegador creada por [aoxilus](https://github.com/aoxilus). Modela un planeta primordial donde elementos cósmicos caen desde el espacio, se desplazan por océanos y atmósferas volcánicas, se enlazan formando moléculas prebióticas, se ensamblan en cadenas de polímeros, sintetizan protocélulas con membrana y evolucionan en organismos nadadores autónomos que se alimentan, crecen y se replican por mitosis.
 
 Inspirada en las hipótesis de la sopa primordial y del mundo de hierro-azufre, la simulación combina un terreno planetario procedural 3D con una escalera de reglas emergentes ejecutada sobre un motor Three.js ligero y no bloqueante.
 
@@ -12,13 +12,16 @@ Inspirada en las hipótesis de la sopa primordial y del mundo de hierro-azufre, 
 
 ## ✨ Características
 
-- 🪐 **Globo terráqueo procedural low-poly** — Esfera planetaria 3D completa con cordilleras montañosas, terreno suavizado, océanos con mareas dinámicas, resplandor atmosférico difuso y cuerpos celestes en órbita (Sol y Luna).
-- 🧪 **Química prebiótica CHONPS** — 12 elementos primordiales inspirados en la Tierra (Oxígeno, Hidrógeno, Carbono, Nitrógeno, Silicio, Hierro, Azufre, Fósforo, Calcio, Sodio, Cloro y metales traza) con pesos orgánicos y afinidades de reacción balanceadas.
-- 🌋 **Cráteres hidrotermales y chimeneas de magma** — 45 cráteres volcánicos activos que pulsan al ritmo de las mareas planetarias, arrojando elementos metálicos reactivos y complejos catalíticos de Hierro-Azufre (`Fe-S`) a zonas calientes de la superficie.
+- 🪐 **Globo terráqueo procedural low-poly** — Esfera planetaria 3D completa con relieve multi-octava (cuencas abisales, plataformas litorales, tierras bajas fértiles, cumbres rocosas), océanos con mareas dinámicas, resplandor atmosférico difuso y cuerpos celestes en órbita (Sol y Luna).
+- 🧪 **Química prebiótica CHONPS** — 12 elementos primordiales inspirados en la Tierra (Oxígeno, Hidrógeno, Carbono, Nitrógeno, Silicio, Hierro, Azufre, Fósforo, Calcio, Sodio, Cloro y metales traza) con pesos orgánicos y afinidades de reacción calibradas.
+- 🌋 **Cráteres hidrotermales y chimeneas de magma** — 45 cráteres volcánicos activos anclados profundamente en el lecho rocoso, expulsando minerales reactivos y moléculas prebióticas diversas (`Fe-S`, `H2S`, `SO2`, `HCN`, `CO2`, `NH3`, `PolyP`).
 - ☄️ **Tormentas de meteoros y siembra cósmica** — Bombardeos dinámicos de asteroides que generan impactos a alta velocidad y dispersan bloques prebióticos frescos por toda la corteza.
-- 🧬 **Escalera de abiogénesis por niveles** — Reglas de transición química deterministas: `Átomos` $\rightarrow$ `Moléculas` $\rightarrow$ `Polímeros` $\rightarrow$ `Protocélulas` $\rightarrow$ `Organismos primitivos`.
-- 🎮 **Navegación híbrida orbital y rasante** — Controles fluidos de teclado (WASD, Q/E, R/F), órbita con arrastre del ratón, zoom con la rueda y límite automático de altura para evitar atravesar el terreno.
-- 📊 **HUD en tiempo real y registro de eventos** — Panel interactivo de telemetría que muestra el recuento de partículas en vivo, la era evolutiva activa, la distribución elemental y un historial cronológico de reacciones químicas.
+- 🧬 **Escalera de abiogénesis por niveles** — Reglas de transición química deterministas: `Átomos` $\rightarrow$ `Moléculas` $\rightarrow$ `Polímeros` $\rightarrow$ `Protocélulas` $\rightarrow$ `Organismos Primitivos` $\rightarrow$ `Colonias Complejas`.
+- 🏊‍♂️ **Motilidad autónoma y mitosis** — Los organismos vivos nadan activamente por los océanos, reptan por aguas someras, absorben nutrientes de átomos cercanos y experimentan **división celular (mitosis)** al saturarse de energía.
+- ☁️ **Nubes translúcidas y vientos atmosféricos** — Nubes low-poly en racimos con suave transparencia atmosférica que derivan en corrientes en chorro y bandas de vientos alisios.
+- 🌊 **Respiración suave de mareas** — Oscilación continua del nivel del mar sin vibración ni Z-fighting, dejando al descubierto planicies en bajamar e inundando lagunas en pleamar.
+- 🎮 **Navegación híbrida orbital y rasante** — Controles fluidos de teclado (WASD, Q/E, R/F, Shift), órbita con arrastre del ratón, zoom con la rueda y límite automático de altura.
+- 📊 **HUD en tiempo real y motor de probabilidades** — Panel de telemetría con recuento de partículas en vivo, era evolutiva activa, distribución elemental y matriz matemática de probabilidades de abiogénesis.
 - ⚡ **Motor no bloqueante de alto rendimiento** — Desarrollado sobre Three.js y Vite con presupuestos de reacción por fotograma, cursores rotativos de partículas y radios de reacción localizados para mantener 60 FPS estables.
 
 ---
@@ -39,9 +42,10 @@ Inspirada en las hipótesis de la sopa primordial y del mundo de hierro-azufre, 
 
 ### Botones de Control de la Simulación
 
-- **Pause / Resume (Pausa / Reanudar)**: Congela y reanuda la física de partículas, oscilaciones de mareas y bucles de enlaces químicos.
-- **Seed Organics (Sembrar orgánicos)**: Inyecta un cúmulo rico en Carbono, Hidrógeno, Oxígeno, Nitrógeno, Fósforo y Azufre directamente en la capa oceánica visible.
-- **Meteor Storm (Tormenta de meteoros)**: Desencadena una lluvia de asteroides desde el espacio profundo que impacta la superficie y dispersa elementos pesados reactivos.
+- **Pause / Resume**: Congela y reanuda la física de partículas, oscilaciones de mareas y bucles de enlaces químicos.
+- **Seed Organics**: Inyecta un cúmulo rico en Carbono, Hidrógeno, Oxígeno, Nitrógeno, Fósforo y Azufre directamente en la capa oceánica visible.
+- **Catalyze Life**: Inyecta compuestos catalíticos de alta energía (`Fe-S`, `PolyP`, `P`, `S`, `C`) en respiraderos hidrotermales para detonar la aparición de vida nadadora.
+- **Meteor Storm**: Desencadena una lluvia de asteroides desde el espacio profundo que impacta la superficie y dispersa elementos pesados reactivos.
 
 ---
 
@@ -54,35 +58,40 @@ flowchart LR
     A["⚛️ Átomos<br>(C, H, O, N, P, S, Fe...)"] --> B["🧪 Moléculas<br>(Precursores orgánicos)"]
     B --> C["🧬 Polímeros<br>(Cadenas / tipo ARN)"]
     C --> D["🫧 Protocélulas<br>(Membranas lipídicas + P/S)"]
-    D --> E["🌱 Vida Primitiva<br>(Organismos autosostenibles)"]
+    D --> E["🌱 Vida Primitiva<br>(Organismos nadadores)"]
+    E --> F["🦠 Colonias Complejas<br>(Mitosis y replicación)"]
 ```
 
 1. **⚛️ Fase 1: Siembra Cósmica y Lluvia de Átomos**
-   - Los átomos se generan en la alta atmósfera y caen bajo gravedad planetaria simulada hacia la superficie.
-   - La distribución elemental se basa en las proporciones terrestres primordiales (O: 25%, H: 20%, C: 12%, N: 10%, Si: 8%, Fe: 6%, S: 4%, P: 3%, etc.).
+   - Los átomos se generan en la alta atmósfera y caen bajo gravedad planetaria simulada hacia la superficie (74% elementos CHONPS prebióticos).
 
 2. **🧪 Fase 2: Síntesis Molecular**
-   - Cuando dos átomos colisionan a corta distancia ($<22$ unidades), se enlazan para formar moléculas tempranas.
-   - Los elementos biógenos aportan puntuación orgánica positiva ($C=+3, N=+2, P=+2, O=+1, H=+1, S=+1$).
+   - Cuando dos átomos colisionan a corta distancia ($<26$ unidades), se enlazan para formar moléculas tempranas.
 
 3. **🧬 Fase 3: Formación de Cadenas de Polímeros**
-   - Cuando los cúmulos orgánicos alcanzan suficiente complejidad química ($\ge 13$ de puntuación orgánica y $\ge 5$ átomos enlazados), las moléculas se estructuran en cadenas de polímeros estables.
+   - Cuando los cúmulos orgánicos alcanzan suficiente complejidad ($\ge 10$ de puntuación y $\ge 3$ átomos), se estructuran en cadenas de polímeros estables.
+   - Complejos de Hierro-Azufre (`Fe-S`) y polifosfatos actúan como catalizadores, elevando las probabilidades de polimerización del 12% al 42%.
 
 4. **🫧 Fase 4: Vesículas y Protocélulas**
-   - Cuando las cadenas de polímeros incorporan elementos estructurales de membrana (**Fósforo** para fosfatos y **Azufre** para puentes catalíticos) bajo suficiente energía térmica ambiental ($> 0.62$), se forma una **protocélula** con membrana.
+   - Cuando las cadenas incorporan **Fósforo** y **Azufre** bajo suficiente calor ambiental ($> 0.48$), se forma una **protocélula** con membrana lipídica y respiración pulsante.
 
-5. **🌱 Fase 5: Vida Primitiva Emergente**
-   - Cuando una protocélula absorbe moléculas orgánicas adicionales en zonas de marea templada o cráteres volcánicos ($\ge 18$ de puntuación orgánica y $> 0.54$ de energía), evoluciona a **vida primitiva**, avanzando la era planetaria en el HUD.
+5. **🌱 Fase 5: Organismos Nadadores Autónomos**
+   - Al absorber nutrientes adicionales en zonas templadas ($\ge 15$ de puntuación y $> 0.45$ de energía), la protocélula evoluciona a un **organismo nadador autónomo** que se propulsa por los mares, rota cilios y absorbe átomos crudos como alimento.
+
+6. **🦠 Fase 6: Colonias Complejas y Mitosis**
+   - Al acumular energía ($> 0.88$) y alimento suficiente, el organismo experimenta **división celular (mitosis)**, dividiéndose en dos y liberando organismos hijos.
 
 ---
 
-## 🌋 Chimeneas Volcánicas y Catálisis Mineral
+## 🧮 Probabilidades Calculadas de Abiogénesis
 
-La química superficial no es uniforme. Los cráteres volcánicos y chimeneas hidrotermales actúan como motores químicos:
-
-- **Pulsos Térmicos de Magma**: 45 lagos de lava en cráteres pulsan con tonalidades rojas/naranjas en fase con el ciclo de marea global.
-- **Erupciones Catalíticas**: Las chimeneas emiten periódicamente ráfagas de hierro, azufre, silicio, fósforo y complejos catalíticos preformados de **Hierro-Azufre (`Fe-S`)**.
-- **Mezcla por Mareas**: El nivel del océano oscila suavemente, bañando y mezclando los elementos en contacto con las superficies minerales cálidas.
+| Nivel de Transición | Condiciones de Mar Abierto | Respiraderos Hidrotermales y Mareas |
+| :--- | :---: | :---: |
+| **Enlace Molecular por Colisión** | 38% | 84% *(catalizado)* |
+| **Formación de Polímeros** | 12% | 42% *(acelerado por Fe-S y PolyP)* |
+| **Encapsulamiento de Protocélulas** | 6% | 38% *(con P + S + energía térmica)* |
+| **Aparición de Organismos Vivos** | 8% | 48% *(en charcas litorales cálidas)* |
+| **Tasa de División por Mitosis** | 4% | 22% *(en estado de alimentación activa)* |
 
 ---
 
@@ -118,7 +127,7 @@ Abre tu navegador en `http://localhost:5173` para explorar el planeta primordial
 
 ### Ejecución de Pruebas
 
-Ejecuta el conjunto de pruebas unitarias con Vitest para validar las mecánicas de simulación, constantes de escala y reglas de reacción:
+Ejecuta el conjunto de pruebas unitarias con Vitest:
 
 ```bash
 npm test
@@ -132,49 +141,46 @@ Compila y empaqueta la aplicación optimizada para producción:
 npm run build
 ```
 
-Los archivos estáticos optimizados se generarán en el directorio `dist/`.
+### Sincronización y Respaldo a GitHub
+
+Para commitear, respaldar y subir todo a GitHub en un solo paso:
+
+```powershell
+# Script de PowerShell
+.\push-github.ps1
+
+# O haz doble clic sobre push-github.bat en el Explorador de Windows
+```
 
 ---
 
 ## 🧠 Arquitectura y Sistemas del Motor
 
-El proyecto está diseñado con una separación clara entre la lógica matemática pura de la simulación y la representación visual en Three.js:
-
 ```
 abiogenesis-sandbox/
-├── index.html               # Estructura semántica HTML5, contenedores del HUD y controles
+├── index.html               # Estructura semántica HTML5, HUD y controles
 ├── style.css                # Estilos visuales dark, glassmorphism e interfaz responsiva
 ├── main.js                  # Escena Three.js, iluminación, cámara y bucles de partículas
 ├── simulation-core.js       # Reglas matemáticas puras, constantes y lógica de reacción
-├── simulation-core.test.js  # Suite de pruebas unitarias con Vitest
+├── simulation-core.test.js  # Suite de pruebas unitarias con Vitest (14/14 tests)
+├── push-github.ps1          # Script de automatización para commit y push a GitHub
+├── push-github.bat          # Lanzador por doble clic para Windows
 ├── package.json             # Metadatos del proyecto y scripts de Vite/Vitest
 └── LICENSE                  # Licencia Creative Commons CC BY-NC-SA 4.0
 ```
-
-### Subsistemas Clave
-
-- **Simulación con Presupuesto por Fotograma (Budgeting)**: Para garantizar 60 FPS estables independientemente del número de partículas:
-  - Las actualizaciones de partículas se procesan mediante un cursor rotativo (`180` partículas por fotograma).
-  - Las comprobaciones de proximidad química están limitadas a un máximo de `120` por fotograma.
-  - Las emisiones volcánicas y tormentas de meteoros se disparan en intervalos de ticks diferenciados.
-- **Funciones Puras Deterministas**: Todas las fórmulas de relieve montañoso, oscilación de mareas, pulsos de lava y clasificación de reacciones residen en `simulation-core.js` y son testeadas de forma unitaria independientemente de WebGL.
-- **Sombreado Low-Poly Procedural**: Geometrías `IcosahedronGeometry` con sombreado plano (`flatShading`) y coloreado por vértices para lograr una estética nítida y retro-moderna.
 
 ---
 
 ## ❓ Preguntas frecuentes (FAQ)
 
 **P: ¿Puede surgir vida de forma completamente automática sin pulsar botones?**  
-R: Sí. La lluvia continua de átomos, la gravedad y las erupciones volcánicas concentran los elementos de manera natural. No obstante, pulsar **«Seed organics»** o **«Meteor storm»** acelera el proceso al introducir cúmulos de alta energía.
+R: Sí. La lluvia continua de átomos, la gravedad y las erupciones volcánicas concentran los elementos de manera natural. Pulsar **«Catalyze life»** o **«Seed organics»** acelera el proceso al introducir cúmulos prebióticos concentrados.
 
-**P: ¿La simulación utiliza física atómica real?**  
-R: Es un modelo fenomenológico emergente inspirado en la química prebiótica real (experimento de Miller-Urey, hipótesis del mundo de hierro-azufre de Wächtershäuser y teorías del mundo de ARN), calibrado para que las transiciones de vida ocurran en minutos en lugar de millones de años.
+**P: ¿Los organismos realmente nadan y se reproducen?**  
+R: ¡Sí! A diferencia de los átomos inertes que flotan por gravedad y viento, los organismos poseen vectores de motilidad autónomos, trayectorias sinusoidales de nado, absorción de nutrientes y división celular mitótica al alcanzar umbrales de energía.
 
-**P: ¿Por qué no se ven todas las partículas desde la vista lejana?**  
-R: Por claridad visual y optimización de rendimiento, únicamente las partículas dentro del radio de observación activo (`1600` unidades) se renderizan y participan en comprobaciones de enlaces químicos.
-
-**P: ¿Puedo añadir nuevos elementos químicos o etapas de reacción?**  
-R: Sí. Puedes modificar la tabla `atoms` en `main.js` o añadir nuevas reglas de transición dentro de `classifyReaction()` en `simulation-core.js`.
+**P: ¿Cómo se eliminó la vibración del océano?**  
+R: El material del océano utiliza bias de polígonos de WebGL (`polygonOffset: true`) y una resolución geométrica desfasada respecto a la tierra, eliminando por completo el Z-fighting coplanar.
 
 ---
 

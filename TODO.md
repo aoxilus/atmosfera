@@ -1,139 +1,70 @@
-# atmosfera TODO
+# atmosfera TODO 🥑
 
 ## Current Goal
 
-Improve the low-poly 3D planet scale so navigation, terrain, clouds, lava, meteors, and chemistry particles are easier to read.
+Interactive, robust, and beautiful low-poly 3D simulation of planetary abiogenesis, prebiotic chemistry, and motile emergent life with automated GitHub synchronization.
 
-## Session Checklist
+---
 
-- [x] Create a structured TODO file before changing scale values.
-- [x] Tune planet/camera scale for better first view.
-- [x] Tune terrain, ocean, clouds, volcanoes, meteors, and particle sizes.
-- [x] Verify the app builds successfully.
-- [x] Confirm localhost still responds.
+## Completed Milestones
 
-## Current Scale Pass
+### 1. 🪐 3D Planet & Rendering Foundation
+- [x] Initial Vite project with Three.js engine.
+- [x] Procedural low-poly globe with multi-octave relief (abyssal basins, coastal shelves, fertile lowlands, rocky mountain summits).
+- [x] Dynamic tidal ocean with smoothed sinusoidal breathing cycle.
+- [x] Zero coastline vibration / Z-fighting via `polygonOffset` and staggered tessellation.
+- [x] Translucent clustered low-poly clouds with depth-independent soft opacity (`opacity: 0.32`, `depthWrite: false`).
+- [x] Flowing atmospheric jet streams and trade wind ribbons (260 flowing wind vectors).
+- [x] Orbiting celestial bodies (Sun directional light + Moon point light with shadows).
+- [x] Atmospheric scattering glow shell.
 
-- [x] Scale the globe about 10x larger.
-- [x] Make chemistry particles about half as large.
-- [x] Keep clouds visually similar unless they create render problems.
-- [x] Make lava/volcano vents clearly visible.
-- [x] Verify build and localhost again.
+### 2. 🌋 Geochemistry & Volcanic Systems
+- [x] 45 active volcanic craters deeply anchored $3.2\times$ into planetary bedrock (zero floating edges on slopes).
+- [x] Synchronized magma crater pulsing with red/orange thermal emissions.
+- [x] Multi-compound volcanic eruptions (`Fe-S`, `H2S`, `SO2`, `HCN`, `CO2`, `NH3`, `PolyP`).
+- [x] Mineral ash and reactive metal bursts (`Fe`, `Si`, `S`, `P`, `Ca`, `Na`, `C`, `M`).
+- [x] Meteor storm impacts delivering cosmic interstellar atoms.
 
-## Current Navigation And Space Pass
+### 3. 🧪 Abiogenesis Rule Ladder & Mathematical Engine
+- [x] 12 Earth-inspired primordial elements with calibrated weights and organic scores.
+- [x] Deterministic reaction classification (`classifyReaction()`).
+- [x] Mathematical reaction probability engine (`reactionProbability()`).
+- [x] Catalytic acceleration from Iron-Sulfur (`Fe-S`) minerals and polyphosphate chains.
+- [x] Tidal pool concentration bonuses in coastal shallows.
+- [x] Real-time Abiogenesis Probability Calculator matrix.
 
-- [x] Add mouse camera control in addition to WASD.
-- [x] Keep the planet slowly rotating.
-- [x] Add a pale blue atmospheric shell/glow.
-- [x] Add a visible sun-like light source.
-- [x] Add a low-poly moon with its own pale light.
-- [x] Verify build and localhost again.
+### 4. 🧬 Motile Life, Locomotion & Mitosis
+- [x] **Protocells (`#ff7bd3`)**: Membrane breathing pulsation and littoral creeping.
+- [x] **Primitive Organisms (`#ffe26e`)**: Autonomous sinusoidal swimming locomotion ($95 \text{ units/s}$), cilia rotation, and active nutrient feeding.
+- [x] **Complex Colonial Life (`#00ffd5`)**: High-speed swimming ($140 \text{ units/s}$) with **Cellular Mitosis** (replication upon energy saturation).
+- [x] Frame-budgeted non-blocking simulation loop locked at 60 FPS.
 
-## Current Planet-Only Scale Pass
+### 5. 🎮 User Interface & Telemetry
+- [x] Free hybrid navigation (WASD, Q/E yaw, mouse drag orbit, mouse wheel / R/F altitude zoom, Shift turbo).
+- [x] Surface collision clamping preventing camera from going below ground.
+- [x] Telemetry HUD: Atoms, Molecules, Polymers, Protocells, Organisms, Complex Life, Era, and Build label.
+- [x] Interactive controls: `Pause / Resume`, `Seed organics`, `Catalyze life`, `Meteor storm`.
+- [x] Chronological Interaction Log feed.
 
-- [x] Scale the planet radius and world distances 10x larger again.
-- [x] Keep visible object sizes unchanged: particles, clouds, lava cones, meteors, sun mesh, and moon mesh.
-- [x] Adapt camera clipping, fog, movement, focus height, atmosphere radius, and spawn distances.
-- [x] Verify build and localhost again.
+### 6. 📚 Documentation, Branding & Automation
+- [x] Full bilingual GitHub documentation (`README.md` and `README.es.md`).
+- [x] Standard AOXILUS public branding (🥑 icon, CC BY-NC-SA 4.0 license, clean headers).
+- [x] Automation scripts: `push-github.ps1` and `push-github.bat` for one-click commit, backup, and push to GitHub.
+- [x] Vitest test suite (`14/14 tests passing`).
+- [x] Synchronized remote repository on GitHub: [https://github.com/aoxilus/atmosfera](https://github.com/aoxilus/atmosfera).
 
-## Current Readability Pass
+---
 
-- [x] Make the planet rounder with more polygons.
-- [x] Replace cone/tree-looking volcanoes with crater-style volcanoes.
-- [x] Restore event logs for molecule, polymer, protocell, and life transitions.
-- [x] Verify build and localhost again.
+## 🔮 Future Roadmap / Next Ideas
 
-## Current Tide Lava Terrain Pass
+- [ ] **Log Export to Disk**: Add button to export simulation interaction logs as a `.txt` or `.json` file.
+- [ ] **Genetic Mutation & Trait Evolution**: Introduce simple genetic bitmasks for organisms (speed, light attraction, thermal tolerance).
+- [ ] **Biome Differentiation**: Distinct environmental zones (Hydrothermal vents, Glacial polar ice, Shallow coral-like reefs, Volcanic archipelagos).
+- [ ] **Surface Walking / Probe Mode**: Ground-level exploration mode with first-person surface rover view.
+- [ ] **Sound & Ambient Audio**: Procedural synthesized wind currents, ocean waves, volcanic rumblings, and chiming prebiotic bonding sounds (Web Audio API).
+- [ ] **Save & Load World State**: Export and import world seeds and particle snapshots via JSON / LocalStorage.
+- [ ] **GitHub Pages Deployment**: Automated GitHub Actions workflow to publish the live 3D simulation to web.
 
-- [x] Reduce ocean tide movement to 1/8 of the current motion.
-- [x] Make the planet more spherical and less jagged.
-- [x] Keep mountain/terrain height near 5% of the planet radius.
-- [x] Change lava into a crater pool that pulses orange/red like a small tide.
-- [x] Verify build and localhost again.
+---
 
-## Current Tide Timing Lava Pass
-
-- [x] Reduce tide animation time/fps speed to 1/8.
-- [x] Make lava use the same tide-like pulse timing as ocean, with red/orange color.
-- [x] Increase lava/volcano count 5x.
-- [x] Verify build and localhost again.
-
-## Current Visibility Debug Pass
-
-- [x] Review source values for planet radius, tide speed, and lava count.
-- [x] Add HUD build label to prove the browser is loading the current code.
-- [x] Add `PROGRESS.md` with current state and verification steps.
-- [x] Restart Vite dev server.
-- [x] Verify localhost serves the current build label.
-
-## Current Interaction Log Pass
-
-- [x] Restore a clearly named Interaction Log panel.
-- [x] Make local chemistry interactions happen often enough at the new planet scale.
-- [x] Add visible log entries for atoms drifting, bonding, polymers, protocells, life, meteors, and lava pulses.
-- [x] Update progress documentation.
-- [x] Verify build and localhost again.
-
-## Current Test Pass
-
-- [x] Add `simulation-core.js` for testable constants and pure logic.
-- [x] Add Vitest unit tests for scale, tide, lava pulse, terrain cap, and reaction classification.
-- [x] Run `npm test`.
-- [x] Run `npm run build`.
-- [x] Push to GitHub if authentication allows.
-
-## Current UX Volcano Chemistry Pass
-
-- [x] Move Interaction Log below the planet viewer.
-- [x] Show Atom Distribution below the viewer so it is not hidden in the side HUD.
-- [x] Replace spaceship-looking volcanoes with surface crater lava pools.
-- [x] Keep chemistry particles on or close to the planet surface instead of floating far away.
-- [x] Restore detailed chemistry narration: atom, molecule, polymer, protocell, primitive life.
-- [x] Run tests and build.
-- [x] Update `PROGRESS.md`.
-
-## Current Volcanic Chemistry Distribution Pass
-
-- [x] Make volcano craters low-poly polygons with varied sizes instead of perfect circles.
-- [x] Make volcanoes emit metallic elements and occasional molecules.
-- [x] Make atom/molecule distribution non-uniform across the surface using hotspots.
-- [x] Prevent camera/focus from going below the terrain surface.
-- [x] Slow ocean/lava tide timing further to remove vibration.
-- [x] Update tests/docs, run build, and push.
-
-## Current Anchored Volcano Pass
-
-- [x] Make each volcano mountain/cone extend down into the terrain.
-- [x] Keep polygon lava as the top crater surface.
-- [x] Remove floating-ring volcano appearance.
-- [x] Run tests/build and push.
-
-## Current Non-Blocking Systems Pass
-
-- [x] Split simulation into frame-friendly systems with intervals/budgets.
-- [x] Make volcanoes visibly throw metallic elements and occasional molecules.
-- [x] Keep render loop responsive by limiting reaction checks and particle updates per frame.
-- [x] Document system cadence in `PROGRESS.md`.
-- [x] Run tests/build and push.
-
-## Completed
-
-- [x] Initial Vite project runs locally.
-- [x] 2D canvas prototype created.
-- [x] WASD navigation added to prototype.
-- [x] Project migrated to Three.js.
-- [x] Low-poly globe created.
-- [x] Ocean, terrain, clouds, volcano lava, meteors, and chemistry particles added.
-- [x] Nearby/visible particle chemistry checks added.
-- [x] HUD and controls remain active.
-
-## Next Ideas
-
-- [ ] Add mouse drag orbit/look controls.
-- [ ] Add surface walking mode attached to the globe.
-- [ ] Add visible wind streams and storm bands.
-- [ ] Add named molecules such as H2O, CO2, NH3, amino acids, lipids, and RNA-like chains.
-- [ ] Add biome zones: hot vents, tidal pools, open ocean, ice, desert, volcanic islands.
-- [ ] Add true chunk/region simulation per planet zone.
-- [ ] Add save/load simulation seed.
-- [ ] Add GitHub Pages deployment.
+*Made with 🥑 by [aoxilus](https://github.com/aoxilus)*

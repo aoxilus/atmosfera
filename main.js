@@ -63,6 +63,7 @@ const tideSpeed = TIDE_SPEED;
 const reactionCheckBudget = 240;
 const MAX_PARTICLES = 680;
 const particles = [];
+const birthFlashes = []; // { position, life, radius } visual birth events
 const events = [];
 const lavaPools = [];
 const volcanoVents = [];
@@ -506,6 +507,12 @@ function combine(a, b) {
     b.dead = true;
   }
 
+  // FIX 2: Flash ring on organism/complex birth
+  if ((reaction.stage === 'organism' || reaction.stage === 'complex' || reaction.stage === 'protocell') &&
+      reaction.stage !== previousStage) {
+    birthFlashes.push({ position: a.mesh.position.clone(), life: 1.0, radius: 80, color: reaction.color });
+  }
+
   for (const msg of reaction.messages) {
     addEvent(msg);
   }
@@ -542,14 +549,19 @@ function reactVisibleParticles() {
 
   for (let i = particles.length - 1; i >= 0; i -= 1) {
     if (!particles[i].dead) continue;
-    particleGroup.remove(particles[i].mesh);
-    particles[i].mesh.geometry.dispose();
-    particles[i].mesh.material.dispose();
+    // FIX 3: Organisms release nutrients when they die
+    const dying = particles[i];
+    if ((dying.stage === 'organism' || dying.stage === 'complex') && particles.length < MAX_PARTICLES - 8) {
+      releaseNutrients(dying.mesh.position);
+    }
+    particleGroup.remove(dying.mesh);
+    dying.mesh.geometry.dispose();
+    dying.mesh.material.dispose();
     particles.splice(i, 1);
   }
 }
 
-// Tidal pool hotspot concentrators — draw particles inward toward 6 fixed ocean basins
+// Tidal pool hotspot concentrators — 6 fixed coastal basins with rich food & concentration
 const TIDAL_HOTSPOTS = [
   new THREE.Vector3(1, 0.3, 0).normalize(),
   new THREE.Vector3(-0.7, -0.4, 0.6).normalize(),
@@ -559,7 +571,22 @@ const TIDAL_HOTSPOTS = [
   new THREE.Vector3(-0.1, -0.9, -0.4).normalize(),
 ];
 
+// FIX 4: Seed food atoms near hotspots every N ticks
+function feedTidalHotspots() {
+  if (tick % 30 !== 0) return;
+  const hs = TIDAL_HOTSPOTS[Math.floor(Math.random() * TIDAL_HOTSPOTS.length)];
+  const organics = atoms.filter((a) => ['C', 'H', 'O', 'N', 'P', 'S'].includes(a.key));
+  for (let i = 0; i < 4; i++) {
+    const kind = organics[Math.floor(Math.random() * organics.length)];
+    const jitter = hs.clone().add(randomSurfacePoint(0.08)).normalize();
+    spawnParticle(kind, surfacePointWithAltitude(145 + Math.random() * 40, jitter), {
+      energy: 0.55 + Math.random() * 0.30,
+    });
+  }
+}
+
 function updateParticles(delta) {
+  feedTidalHotspots();
   if (tick % 3 === 0) {
     spawnParticle(undefined, surfacePointWithAltitude(140 + Math.random() * 180, focus.clone().normalize().add(randomSurfacePoint(0.18)).normalize()));
   }
@@ -580,6 +607,8 @@ function updateParticles(delta) {
     if (particle.stage === 'protocell') {
       const pulse = Math.sin(tick * 0.08 + particle.phase) * 0.14;
       particle.mesh.scale.setScalar(particle.baseScale * (1 + pulse));
+      // FIX 1b: Protocells also get geothermal warmth (smaller amount)
+      particle.energy = Math.min(1, particle.energy + 0.003 * delta * 60);
     } else if (particle.stage === 'organism' || particle.stage === 'complex') {
       if (!particle.heading) {
         particle.heading = new THREE.Vector3(1, 0, 0).cross(direction).normalize();
@@ -590,13 +619,19 @@ function updateParticles(delta) {
 
       particle.mesh.rotation.z = Math.sin(tick * 0.16 + particle.swimSeed) * 0.45;
 
+      // FIX 1: Passive energy regeneration from sunlight & geothermal heat
+      const sunDir = new THREE.Vector3(-34000, 28000, 19000).normalize();
+      const solarExposure = Math.max(0, direction.dot(sunDir));
+      const geothermalBase = 0.004;
+      particle.energy = Math.min(1, particle.energy + (solarExposure * 0.012 + geothermalBase) * delta * 60);
+
       // Active Nutrient Feeding
       for (const other of particles) {
-        if (other !== particle && !other.dead && other.stage === 'atom' && position.distanceTo(other.mesh.position) < 32) {
+        if (other !== particle && !other.dead && other.stage === 'atom' && position.distanceTo(other.mesh.position) < 55) {
           other.dead = true;
           particle.organic += 1;
           particle.consumed += 1;
-          particle.energy = Math.min(1, particle.energy + 0.14);
+          particle.energy = Math.min(1, particle.energy + 0.22);
           break;
         }
       }
@@ -616,24 +651,23 @@ function updateParticles(delta) {
       }
     }
 
-    // 1b. Tidal Pool Concentration: molecules/polymers in ocean zone are gently drawn
-    //     toward the nearest hotspot, creating local chemical concentration pockets.
-    if ((particle.stage === 'molecule' || particle.stage === 'polymer') && !particle.isMineral) {
+    // FIX 5: Stronger tidal pool concentration — molecules/polymers/protocells drawn inward
+    if (!particle.isMineral && (particle.stage === 'molecule' || particle.stage === 'polymer' || particle.stage === 'protocell')) {
       const currentOceanR = planetRadius + 140 * oceanTideScale;
-      if (currentRadius <= currentOceanR + 200) {
-        // Find nearest tidal hotspot
+      if (currentRadius <= currentOceanR + 250) {
         let bestHotspot = TIDAL_HOTSPOTS[0];
         let bestDot = -Infinity;
         for (const hs of TIDAL_HOTSPOTS) {
           const dot = direction.dot(hs);
           if (dot > bestDot) { bestDot = dot; bestHotspot = hs; }
         }
-        const hotspotSurface = bestHotspot.clone().multiplyScalar(planetRadius + 145);
-        const toHotspot = hotspotSurface.sub(position);
+        const hotspotSurface = bestHotspot.clone().multiplyScalar(planetRadius + 148);
+        const toHotspot = hotspotSurface.clone().sub(position);
         const dist = toHotspot.length();
-        // Only attract if within 3000 units of hotspot
-        if (dist < 3000 && dist > 20) {
-          position.addScaledVector(toHotspot.normalize(), Math.min(dist * 0.018, 32) * delta * 60);
+        if (dist < 4000 && dist > 15) {
+          // FIX 5: Much stronger pull within 800 units (dense concentration zone)
+          const pullStrength = dist < 800 ? 0.10 : 0.035;
+          position.addScaledVector(toHotspot.normalize(), Math.min(dist * pullStrength, 55) * delta * 60);
         }
       }
     }
@@ -686,6 +720,19 @@ function updateParticles(delta) {
   }
 
   reactVisibleParticles();
+}
+
+// FIX 3: Nutrient release geometry pool (reuse for dead organisms)
+const nutrientGeo = new THREE.IcosahedronGeometry(1.2, 0);
+
+function releaseNutrients(position) {
+  const organics = atoms.filter((a) => ['C', 'H', 'O', 'N'].includes(a.key));
+  const count = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) {
+    const kind = organics[Math.floor(Math.random() * organics.length)];
+    const offset = randomSurfacePoint(0.01).normalize().multiplyScalar(20 + Math.random() * 30);
+    spawnParticle(kind, position.clone().add(offset), { energy: 0.35 + Math.random() * 0.25 });
+  }
 }
 
 function updateMeteors() {
@@ -763,6 +810,45 @@ function updateHud() {
     : 'Atom rain';
 }
 
+// FIX 2: Birth flash overlay canvas — drawn on top of Three.js canvas
+const flashCanvas = document.createElement('canvas');
+flashCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99';
+document.body.appendChild(flashCanvas);
+const flashCtx = flashCanvas.getContext('2d');
+function resizeFlash() { flashCanvas.width = window.innerWidth; flashCanvas.height = window.innerHeight; }
+resizeFlash();
+window.addEventListener('resize', resizeFlash);
+
+function updateBirthFlashes() {
+  flashCtx.clearRect(0, 0, flashCanvas.width, flashCanvas.height);
+  for (let i = birthFlashes.length - 1; i >= 0; i--) {
+    const flash = birthFlashes[i];
+    flash.life -= 0.025;
+    if (flash.life <= 0) { birthFlashes.splice(i, 1); continue; }
+
+    // Project 3D position to 2D screen
+    const pos = flash.position.clone();
+    pos.project(camera);
+    const sx = (pos.x * 0.5 + 0.5) * flashCanvas.width;
+    const sy = (-pos.y * 0.5 + 0.5) * flashCanvas.height;
+    if (pos.z > 1) continue; // behind camera
+
+    const expandR = (1 - flash.life) * flash.radius * 2.5 + 20;
+    const alpha = flash.life * 0.82;
+    flashCtx.beginPath();
+    flashCtx.arc(sx, sy, expandR, 0, Math.PI * 2);
+    flashCtx.strokeStyle = flash.color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+    flashCtx.lineWidth = 3 * flash.life;
+    flashCtx.stroke();
+
+    // Inner glow dot
+    flashCtx.beginPath();
+    flashCtx.arc(sx, sy, 6 * flash.life, 0, Math.PI * 2);
+    flashCtx.fillStyle = flash.color + 'cc';
+    flashCtx.fill();
+  }
+}
+
 function frame() {
   const delta = Math.min(clock.getDelta(), 0.033);
   tick += 1;
@@ -795,8 +881,10 @@ function frame() {
   }
   if (tick % 8 === 0) updateHud();
   renderer.render(scene, camera);
+  updateBirthFlashes(); // FIX 2: overlay birth flashes on top of WebGL canvas
   requestAnimationFrame(frame);
 }
+
 
 function resize() {
   const rect = canvas.getBoundingClientRect();

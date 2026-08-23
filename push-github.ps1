@@ -112,6 +112,9 @@ try {
 
     Write-Step "🚀" "Subiendo a origin/$currentBranch..."
     git push origin $currentBranch
+    if ($currentBranch -eq "master") {
+        git push origin master:main --quiet 2>$null
+    }
 
     Write-Success "¡Cambios subidos exitosamente a GitHub!"
     Write-Host "`n  🌐 Repositorio: https://github.com/aoxilus/atmosfera`n" -ForegroundColor DarkCyan
